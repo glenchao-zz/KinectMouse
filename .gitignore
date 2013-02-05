@@ -42,6 +42,8 @@ local.properties
 *.sln.docstates
 
 # Build results
+/bin/[Dd]ebug
+/obj/[Dd]ebug
 [Dd]ebug/
 [Rr]elease/
 *_i.c

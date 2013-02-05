@@ -96,9 +96,20 @@ namespace VirtualMouse
                 {
                     this.sensor.Start();
                 }
-                catch (IOException)
+                catch (IOException ex)
                 {
                     this.sensor = null;
+                    this.DebugMsg.Text = ex.Message;
+                }
+                
+                // Try to use near mode if possible 
+                try
+                {
+                    this.sensor.DepthStream.Range = DepthRange.Near;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    this.DebugMsg.Text = "Near field mode: " + ex.Message;
                 }
             }
 
