@@ -5,7 +5,7 @@
         Height="735" 
         Width="1300"
         Loaded="WindowLoaded"
-        Closing="WindowColosing">
+        Closing="WindowClosing">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>

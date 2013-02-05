@@ -124,7 +124,7 @@ namespace VirtualMouse
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void WindowColosing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void WindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (this.sensor != null)
                 this.sensor.Stop();
