@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" 
         Height="735" 
-        Width="770"
+        Width="1300"
         Loaded="WindowLoaded"
         Closing="WindowColosing">
     <Grid>
@@ -16,8 +16,11 @@
             <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
         <TextBox Name="DebugMsg" Grid.Row="0" Grid.ColumnSpan="2" Text="Debug message..." Foreground="Red" Margin="10,0"></TextBox>
-        <Viewbox Grid.Row="1" Grid.Column="0" Stretch="Uniform" >
-            <Image Name="colorImage" Width="640" Height="480" />
+        <Viewbox Grid.Row="1" Grid.Column="0" Stretch="Uniform">
+            <Image Name="colorImage" Width="640" Height="480"/>
+        </Viewbox>
+        <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform">
+            <Image Name="depthImage" Width="640" Height="480"/>
         </Viewbox>
         
     </Grid>

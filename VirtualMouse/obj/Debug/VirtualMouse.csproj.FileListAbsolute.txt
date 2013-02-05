@@ -10,3 +10,15 @@ D:\SkyDrive\UToronto\ESC472 Capstone Design\VirtualMouse\VirtualMouse\obj\Debug\
 D:\SkyDrive\UToronto\ESC472 Capstone Design\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse.csproj.GenerateResource.Cache
 D:\SkyDrive\UToronto\ESC472 Capstone Design\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse.exe
 D:\SkyDrive\UToronto\ESC472 Capstone Design\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse.pdb
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse.exe
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse.pdb
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\bin\Debug\VirtualMouse.exe
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\bin\Debug\VirtualMouse.pdb
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse.csprojResolveAssemblyReference.cache
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\MainWindow.baml
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\MainWindow.g.cs
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\App.g.cs
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse_MarkupCompile.cache
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse.g.resources
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse.Properties.Resources.resources
+D:\Documents\GitHub\VirtualMouse\VirtualMouse\obj\Debug\VirtualMouse.csproj.GenerateResource.Cache
