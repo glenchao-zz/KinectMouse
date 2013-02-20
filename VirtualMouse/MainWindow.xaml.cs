@@ -135,16 +135,6 @@ namespace VirtualMouse
                     this.sensor = null;
                     this.DebugMsg.Text = ex.Message;
                 }
-                
-                // Try to use near mode if possible 
-                try
-                {
-                    this.sensor.DepthStream.Range = DepthRange.Near;
-                }
-                catch (InvalidOperationException ex)
-                {
-                    this.DebugMsg.Text = "Near field mode: " + ex.Message;
-                }
             }
 
             if (this.sensor == null)
@@ -378,6 +368,27 @@ namespace VirtualMouse
         private void RenderClippedEdges(Skeleton[] skeletons, DrawingContext dc)
         {
             //throw new NotImplementedException();
+        }
+
+        private void nearFieldButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Try to use near mode if possible 
+            try
+            {
+                if (this.sensor.DepthStream.Range == DepthRange.Default)
+                {
+                    this.sensor.DepthStream.Range = DepthRange.Near;
+                    nearFieldButton.Content = "Turn Off";
+                }
+                else
+                {
+                    this.sensor.DepthStream.Range = DepthRange.Default;
+                    nearFieldButton.Content = "Turn On";
+                }
+            }
+            catch(InvalidCastException ex){
+                this.DebugMsg.Text = "Near field mode: " + ex.Message;
+            }
         }
 
     }
