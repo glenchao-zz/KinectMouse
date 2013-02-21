@@ -17,7 +17,7 @@
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
-        <TextBox x:Name="DebugMsg" Grid.Row="0" Grid.ColumnSpan="2" Text="Debug message..." Foreground="Red" Margin="10,0"/>
+        <TextBox x:Name="DebugMsg" Grid.Row="0" Grid.ColumnSpan="2" Text="Debug message..." Foreground="Red" Margin="0,5" FontSize="20" BorderThickness="0"/>
         <Viewbox Grid.Row="1" Grid.Column="0" Stretch="Uniform">
             <Image x:Name="depthImage" Width="640" Height="480"/>
         </Viewbox>
