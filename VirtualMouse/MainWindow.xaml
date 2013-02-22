@@ -4,7 +4,7 @@
         xmlns:Properties="clr-namespace:VirtualMouse.Properties" x:Class="VirtualMouse.MainWindow"
         Title="MainWindow" 
         Height="600" 
-        Width="650"
+        Width="1000"
         Loaded="WindowLoaded"
         Closing="WindowClosing">
     <Grid>
@@ -17,16 +17,21 @@
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
-        <TextBox x:Name="DebugMsg" Grid.Row="0" Grid.ColumnSpan="2" Text="Debug message..." Foreground="Red" Margin="0,5" FontSize="20" BorderThickness="0"/>
-        <Viewbox Grid.Row="1" Grid.Column="0" Stretch="Uniform">
+        <Viewbox Grid.Row="0" Grid.Column="0" Stretch="Uniform">
             <Image x:Name="depthImage" Width="640" Height="480"/>
         </Viewbox>
-        <StackPanel Grid.Row="2" Grid.Column="0" Margin="10">
+        <StackPanel Grid.Row="1" Grid.Column="0" Margin="10">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Near Field Mode "/>
                 <Button x:Name="nearFieldButton" Content="Turn On" Click="nearFieldButton_Click"/>
             </StackPanel>
-
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="getSurfacebutton" Content="Get Surface" Click="getSurfacebutton_Click"/>
+            </StackPanel>
         </StackPanel>
+        <ScrollViewer Grid.Row="0" Grid.Column="1" Height="500">
+            <TextBox x:Name="DebugBox" Text="Debug message..." 
+                     Foreground="Red" FontSize="20" BorderThickness="0"/>
+        </ScrollViewer>
     </Grid>
 </Window>
