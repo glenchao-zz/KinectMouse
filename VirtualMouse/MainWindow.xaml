@@ -4,7 +4,7 @@
         xmlns:Properties="clr-namespace:VirtualMouse.Properties" x:Class="VirtualMouse.MainWindow"
         Title="MainWindow" 
         Height="600" 
-        Width="650"
+        Width="1300"
         Loaded="WindowLoaded"
         Closing="WindowClosing">
     <Grid>
@@ -20,6 +20,9 @@
         <TextBox x:Name="DebugMsg" Grid.Row="0" Grid.ColumnSpan="2" Text="Debug message..." Foreground="Red" Margin="10,0"/>
         <Viewbox Grid.Row="1" Grid.Column="0" Stretch="Uniform">
             <Image x:Name="depthImage" Width="640" Height="480"/>
+        </Viewbox>
+        <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform">
+            <Image x:Name="contourImage" Width="640" Height="480"/>
         </Viewbox>
         <StackPanel Grid.Row="2" Grid.Column="0" Margin="10">
             <StackPanel Orientation="Horizontal">
