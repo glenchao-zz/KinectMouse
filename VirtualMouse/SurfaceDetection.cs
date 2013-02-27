@@ -15,8 +15,13 @@ namespace VirtualMouse
         
         //}
         public DepthImagePixel[] emptyFrame { get; set; }
-        public DepthImagePixel[] playerFrame { get; set; }
+        public int[] surfacePixels { get; set; }
         public Point jointPoint { get; set; }
+        public Vector origin { get; set; }
+        public Vector sample1 { get; set; }
+        public Vector sample2 { get; set; }
+        public Vector vectorA { get; set; }
+        public Vector vectorB { get; set; }
         public Plane surface { get; set; }
         private int distance = 2;
 
@@ -26,24 +31,48 @@ namespace VirtualMouse
         {
             int index = Helper.Point2DepthIndex(jointPoint);
             short depth = emptyFrame[index].Depth;
-            Vector origin = new Vector(jointPoint.X, jointPoint.Y, (double)depth);
+            this.origin = new Vector(jointPoint.X, jointPoint.Y, (double)depth);
 
             Point point1 = new Point(jointPoint.X - distance, jointPoint.Y);
             int index1 = Helper.Point2DepthIndex(point1);
             short depth1 = emptyFrame[index1].Depth;
-            Vector vector1 = new Vector(point1.X, point1.Y, (double)depth1);
+            this.sample1 = new Vector(point1.X, point1.Y, (double)depth);
 
             Point point2 = new Point(jointPoint.X, jointPoint.Y - distance);
             int index2 = Helper.Point2DepthIndex(point2);
             short depth2 = emptyFrame[index2].Depth;
-            Vector vector2 = new Vector(point2.X, point2.Y, (double)depth2);
+            this.sample2= new Vector(point2.X, point2.Y, (double)depth2);
 
-            Vector vectorA = origin.Subtraction(vector1);
-            Vector vectorB = origin.Subtraction(vector2);
+            this.vectorA = this.sample1.Subtraction(this.origin);
+            this.vectorB = this.sample2.Subtraction(this.origin);
 
             Vector normal = vectorA.CrossProduct(vectorB);
             this.surface = new Plane(normal, origin);
+
             return this.surface;
+        }
+
+        public int[] getSurfaceFrame()
+        {
+            this.surfacePixels = new int[emptyFrame.Length];
+            for (int i = 0; i < this.emptyFrame.Length; ++i)
+            {
+                // Get the depth for this pixel 
+                short depth = emptyFrame[i].Depth;
+                double X = i % 640;
+                double Y = (i - X) / 640;
+                Vector v = new Vector(X, Y, (double)depth);
+                double diff = this.surface.IsOnPlane(v);
+                if (diff < 10)
+                {
+                    this.surfacePixels[i] = (byte)diff;  // Write the blue byte
+                }
+                else
+                {
+                    this.surfacePixels[i] = -1;  // Write the blue byte
+                }
+            }
+            return this.surfacePixels;
         }
     }
 
@@ -66,9 +95,9 @@ namespace VirtualMouse
 
         public Vector CrossProduct(Vector v)
         {
-            return new Vector(this.y * v.z - v.y * this.z,
-                              this.z * v.x - this.x * v.z,
-                              this.x * v.y - v.x * this.y);
+            return new Vector(this.y*v.z - this.z*v.y, 
+                              this.z*v.x - this.x*v.z,
+                              this.x*v.y - this.y*v.x);
         }
 
         public double DotProduct(Vector v)
@@ -81,23 +110,31 @@ namespace VirtualMouse
             double mag = Math.Sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
             return new Vector(this.x / mag, this.y / mag, this.z / mag);
         }
+
+        public override string ToString()
+        {
+            double x = Math.Round(this.x, 2);
+            double y = Math.Round(this.y, 2);
+            double z = Math.Round(this.z, 2);
+            return String.Format("X: {0}, Y: {1}, Z: {2}", x, y, z);
+        }
     }
 
     class Plane
     {
         public Vector normal { get; set; }
         public double d { get; set; }
-        
-        public Plane(Vector norm, double d)
+
+        public Plane(Vector normal, double d)
         {
-            this.normal = norm.Normalize();
+            this.normal = normal.Normalize();
             this.d = d;
         }
 
         public Plane(Vector normal, Vector v)
         {
-            this.normal = normal;
-            this.d = normal.DotProduct(v);
+            this.normal = normal.Normalize();
+            this.d = this.normal.DotProduct(v);
         }
 
         public double IsOnPlane(Vector v)
@@ -105,6 +142,12 @@ namespace VirtualMouse
             double diff = Math.Abs(this.normal.DotProduct(v) - this.d);;
             //return diff < 1000 ? true : false;
             return diff;
+        }
+
+        public override string ToString()
+        {
+            double d = Math.Round(this.d, 2);
+            return String.Format(this.normal.ToString() + " D: {0}", d);
         }
     }
 }
