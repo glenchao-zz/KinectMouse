@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Properties="clr-namespace:VirtualMouse.Properties" x:Class="VirtualMouse.MainWindow"
     Title="MainWindow"
-    Height="1200"
+    Height="700"
     Width="974"
     Loaded="WindowLoaded"
     Closing="WindowClosing">
@@ -11,18 +11,16 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto" />
             <ColumnDefinition Width="auto" />
             <ColumnDefinition Width="auto" />
         </Grid.ColumnDefinitions>
         <Viewbox Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Stretch="Uniform">
             <Image x:Name="depthImage" Width="640" Height="480" />
         </Viewbox>
-        <Viewbox Grid.Row="2" Grid.Column="0" Stretch="Uniform">
+        <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform">
             <Image x:Name="fingerImage" Width="320" Height="240" />
         </Viewbox>
         <Grid Grid.Row="0" Grid.Column="1">
