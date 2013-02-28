@@ -118,8 +118,16 @@ namespace VirtualMouse
             {
                 // Kinect settings
                 this.sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
-                this.sensor.SkeletonStream.Enable();
+                this.sensor.SkeletonStream.Enable(
+                    new TransformSmoothParameters(){
+                        Smoothing = 0.5f,
+                        Correction = 0.1f,
+                        Prediction = 0.5f,
+                        JitterRadius = 0.1f,
+                        MaxDeviationRadius = 0.1f
+                    });
                 this.sensor.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
+                this.sensor.SkeletonStream.EnableTrackingInNearRange = true;
                 
                 // Allocate space to put the pixels we'll receive
                 this.depthImageData = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
@@ -162,9 +170,6 @@ namespace VirtualMouse
                     this.sensor = null;
                     DebugMsg(ex.Message);
                 }
-
-                // Turn on near field mode on default
-                NearFieldButton_Click(null, null);
                 
                 // Add an event handler to be called whenever there is a color, depth, or skeleton frame data is ready
                 b_InitializeEnvironment = true;
