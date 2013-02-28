@@ -16,7 +16,7 @@ namespace VirtualMouse
         //}
         public DepthImagePixel[] emptyFrame { get; set; }
         public int[] surfaceMatrix { get; set; }
-        public Point jointPoint { get; set; }
+        public Point definitionPoint { get; set; }
         public Vector origin { get; set; }
         public Vector sample1 { get; set; }
         public Vector sample2 { get; set; }
@@ -31,16 +31,16 @@ namespace VirtualMouse
 
         public Plane getSurface()
         {
-            int index = Helper.Point2DepthIndex(jointPoint);
+            int index = Helper.Point2DepthIndex(definitionPoint);
             short depth = emptyFrame[index].Depth;
-            this.origin = new Vector(jointPoint.X, jointPoint.Y, (double) depth);
+            this.origin = new Vector(definitionPoint.X, definitionPoint.Y, (double)depth);
 
-            Point point1 = new Point(jointPoint.X - distance, jointPoint.Y);
+            Point point1 = new Point(definitionPoint.X - distance, definitionPoint.Y);
             int index1 = Helper.Point2DepthIndex(point1);
             short depth1 = emptyFrame[index1].Depth;
             this.sample1 = new Vector(point1.X, point1.Y, (double) depth);
 
-            Point point2 = new Point(jointPoint.X, jointPoint.Y - distance);
+            Point point2 = new Point(definitionPoint.X, definitionPoint.Y - distance);
             int index2 = Helper.Point2DepthIndex(point2);
             short depth2 = emptyFrame[index2].Depth;
             this.sample2 = new Vector(point2.X, point2.Y, (double) depth2);
@@ -50,6 +50,8 @@ namespace VirtualMouse
 
             Vector normal = vectorA.CrossProduct(vectorB);
             this.surface = new Plane(normal, origin);
+
+            getSurfaceMatrix();
 
             return this.surface;
         }

@@ -3,12 +3,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Properties="clr-namespace:VirtualMouse.Properties" x:Class="VirtualMouse.MainWindow"
     Title="MainWindow"
-    Height="700"
+    Height="1200"
     Width="974"
     Loaded="WindowLoaded"
     Closing="WindowClosing">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
@@ -21,16 +22,21 @@
         <Viewbox Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Stretch="Uniform">
             <Image x:Name="depthImage" Width="640" Height="480" />
         </Viewbox>
+        <Viewbox Grid.Row="2" Grid.Column="0" Stretch="Uniform">
+            <Image x:Name="fingerImage" Width="320" Height="240" />
+        </Viewbox>
         <Grid Grid.Row="0" Grid.Column="1">
             <Viewbox Stretch="Uniform">
                 <Image x:Name="depthImage_debug" Width="320" Height="240" />
             </Viewbox>
-            <Canvas x:Name="canvas_debug" Width="320" Height="240"></Canvas>
+            <Canvas x:Name="canvas_debug" Width="320" Height="240">
+                <Ellipse x:Name="indicator" Width="10" Height="10" Fill="Red"/>
+            </Canvas>
         </Grid>
         <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform">
             <Image x:Name="depthImage_indicator" Width="320" Height="240" />
         </Viewbox>
-        <StackPanel Grid.Row="2" Grid.Column="0" Margin="10">
+        <StackPanel Grid.Row="3" Grid.Column="0" Margin="10">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Near Field Mode " />
                 <Button x:Name="nearFieldButton" Content="Turn On" Click="NearFieldButton_Click" />
@@ -39,7 +45,7 @@
                 <Button x:Name="getSurfaceButton" Content="Get Surface" Click="GetSurfaceButton_Click" />
             </StackPanel>
         </StackPanel>
-        <DockPanel x:Name="dockPanel" Grid.Row="2" Grid.Column="1" LastChildFill="True">
+        <DockPanel x:Name="dockPanel" Grid.Row="3" Grid.Column="1" LastChildFill="True">
             <ScrollViewer Height="{Binding ActualHeight, ElementName=dockPanel, Mode=OneWay}">
                 <TextBox x:Name="DebugBox" Text="Start Program..." Foreground="white" Background="Black" />
             </ScrollViewer>
