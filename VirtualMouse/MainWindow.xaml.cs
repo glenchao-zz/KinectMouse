@@ -118,7 +118,10 @@ namespace VirtualMouse
             {
                 // Kinect settings
                 this.sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
+                
                 this.sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
+                this.sensor.DepthStream.Range = DepthRange.Near;
+
                 this.sensor.SkeletonStream.Enable(
                     new TransformSmoothParameters(){
                         Smoothing = 0.5f,
@@ -171,11 +174,23 @@ namespace VirtualMouse
                     this.sensor = null;
                     DebugMsg(ex.Message);
                 }
-                
-                // Add an event handler to be called whenever there is a color, depth, or skeleton frame data is ready
-                b_InitializeEnvironment = true;
-                this.sensor.DepthFrameReady += InitializeEnvironment;
 
+
+                Plane surface = Helper.LoadSurface();
+                if (surface != null)
+                {
+                    surfaceDetection.surface = surface;
+                    DebugMsg("Save surface settings loaded");
+                    DebugMsg(surface.ToString());
+                    b_ColorPlaneDepthFrame = true;
+                    this.sensor.AllFramesReady += ColorPlaneDepthFrame;
+                }
+                else
+                {
+                    // Add an event handler to be called whenever there is a color, depth, or skeleton frame data is ready
+                    b_InitializeEnvironment = true;
+                    this.sensor.DepthFrameReady += InitializeEnvironment;
+                }
                 // NOTE: Comment this out when testing surface
                 // Add a event handler to perform finger tracking
                 //b_TrackFinger = true;
@@ -197,6 +212,7 @@ namespace VirtualMouse
         {
             if (this.sensor != null)
                 this.sensor.Stop();
+            Properties.Settings.Default.Save();
         }
 
         /// <summary>
@@ -255,6 +271,9 @@ namespace VirtualMouse
                     DebugMsg("Hook  up DefineSurface");
                     this.sensor.SkeletonFrameReady += DefineSurface;
                     b_DefineSurface = true;
+
+                    this.initEnvButton.Visibility = System.Windows.Visibility.Collapsed;
+                    this.defineSurfaceButton.Visibility = System.Windows.Visibility.Visible;
                 }
             }
         }
@@ -420,15 +439,41 @@ namespace VirtualMouse
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ColorPlaneDepthFrame(object sender, DepthImageFrameReadyEventArgs e)
+        private void ColorPlaneDepthFrame(object sender, AllFramesReadyEventArgs e)
         {
             if (!b_ColorPlaneDepthFrame)
             {
-                this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
+                this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
                 DebugMsg("Blocked ColorPlaneDepthFrame");
                 return;
             }
-            
+
+            //get skeleton frame to get the hand point data 
+            Skeleton[] skeletons = new Skeleton[0];
+            using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
+            {
+                if (skeletonFrame != null)
+                {
+                    skeletons = new Skeleton[skeletonFrame.SkeletonArrayLength];
+                    skeletonFrame.CopySkeletonDataTo(skeletons);
+                }
+
+                if (skeletons.Length != 0)
+                {
+                    for (int i = 0; i < skeletons.Length; i++)
+                    {
+                        if (skeletons[i].TrackingState == SkeletonTrackingState.Tracked)
+                        {
+                            user.playerIndex = (short)(i + 1);
+                            user.trackingId = skeletons[i].TrackingId;
+                        }
+                    }
+                }
+            }
+
+            if (user.playerIndex == 0)
+                return; 
+
             using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
             {
                 if (depthFrame != null)
@@ -509,13 +554,25 @@ namespace VirtualMouse
             return new Point(depthPoint.X, depthPoint.Y);
         }
 
-        private void GetSurfaceButton_Click(object sender, RoutedEventArgs e)
+        private void InitializeEnvironmentButton_Click(object sender, RoutedEventArgs e)
+        {
+            b_ColorPlaneDepthFrame = false;
+            this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
+            b_InitializeEnvironment = true;
+            this.sensor.DepthFrameReady += InitializeEnvironment;            
+        }
+
+        private void DefineSurfaceButton_Click(object sender, RoutedEventArgs e)
         {
             if (surfaceDetection == null || surfaceDetection.emptyFrame == null || surfaceDetection.definitionPoint == null)
             {
                 DebugMsg("emptyFrame or playerFrame is null");
                 return;
             }
+            // toggle buttons
+            this.initEnvButton.Visibility = System.Windows.Visibility.Visible;
+            this.defineSurfaceButton.Visibility = System.Windows.Visibility.Collapsed;
+
 
             // unhook all event handlers
             b_TrackFinger = false;
@@ -523,11 +580,11 @@ namespace VirtualMouse
             b_DefineSurface = false;
             this.sensor.SkeletonFrameReady -= DefineSurface;
             b_ColorPlaneDepthFrame = false;
-            this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
+            this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
             
             // Compute surface
             Plane surface = surfaceDetection.getSurface();
-
+            Helper.SaveSurface(surface);
             DebugMsg("***************************************");
             DebugMsg("Origin   -- " + surfaceDetection.origin.ToString());
             DebugMsg("Sample1  -- " + surfaceDetection.sample1.ToString());
@@ -539,7 +596,7 @@ namespace VirtualMouse
 
             // Hook back up event handler
             b_ColorPlaneDepthFrame = true;
-            this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
+            this.sensor.AllFramesReady += ColorPlaneDepthFrame;
         }
 
         private void NearFieldButton_Click(object sender, RoutedEventArgs e)
@@ -575,14 +632,14 @@ namespace VirtualMouse
 
             if (surfaceMode)
             {
-                this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
+                this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
                 this.sensor.AllFramesReady += TrackFingers;
                 this.modeButton.Content = "Finger Mode";
             }
             else
             {
                 this.sensor.AllFramesReady -= TrackFingers;
-                this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
+                this.sensor.AllFramesReady += ColorPlaneDepthFrame;
                 this.modeButton.Content = "Surface Mode";
             }
         }

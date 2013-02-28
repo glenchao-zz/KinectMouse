@@ -84,6 +84,7 @@ namespace VirtualMouse
         }
     }
 
+    [Serializable]
     internal class Vector
     {
         public double x { get; set; }
@@ -134,6 +135,7 @@ namespace VirtualMouse
         }
     }
 
+    [Serializable]
     internal class Plane
     {
         public Vector normal { get; set; }
@@ -142,6 +144,12 @@ namespace VirtualMouse
         public Plane(Vector normal, double d)
         {
             this.normal = normal.Normalize();
+            this.d = d;
+        }
+
+        public Plane(double x, double y, double z, double d)
+        {
+            this.normal = (new Vector(x, y, z)).Normalize();
             this.d = d;
         }
 

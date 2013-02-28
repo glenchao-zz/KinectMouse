@@ -12,6 +12,28 @@ namespace VirtualMouse
 {
     static class Helper
     {
+        public static void SaveSurface(Plane surface)
+        {
+            Properties.Settings.Default.SurfaceX = surface.normal.x;
+            Properties.Settings.Default.SurfaceY = surface.normal.y;
+            Properties.Settings.Default.SurfaceZ = surface.normal.z;
+            Properties.Settings.Default.SurfaceD = surface.d;
+            Properties.Settings.Default.b_Surface = true;
+            Properties.Settings.Default.Save();
+        }
+
+        public static Plane LoadSurface()
+        {
+            if (!Properties.Settings.Default.b_Surface)
+                return null;
+
+            Plane surface = new Plane(Properties.Settings.Default.SurfaceX,
+                                      Properties.Settings.Default.SurfaceY,
+                                      Properties.Settings.Default.SurfaceZ,
+                                      Properties.Settings.Default.SurfaceD);
+            return surface;
+        }
+
         public static double GetMostCommonDepthImagePixel(DepthImagePixel[] data, int start, int length)
         {
             if (start + length > data.Length)
