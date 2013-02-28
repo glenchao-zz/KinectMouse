@@ -6,11 +6,26 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Microsoft.Kinect;
 
 namespace VirtualMouse
 {
     static class Helper
     {
+        public static double GetMostCommonDepthImagePixel(DepthImagePixel[] data, int start, int length)
+        {
+            if (start + length > data.Length)
+                throw new InvalidOperationException();
+
+            DepthImagePixel[] ret = new DepthImagePixel[length];
+            for (int i = 0; i < length; i++)
+            {
+                ret[i] = data[i + start];
+            }
+            var temp = ret.GroupBy(x => x.Depth).OrderByDescending(x => x.Count()).First().Key;
+            return (double)temp;
+        }
+
         public static int Point2DepthIndex(Point point)
         {
             return 640 * ((int)point.Y) + (int)point.X;

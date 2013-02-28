@@ -18,6 +18,11 @@ namespace VirtualMouse
     public partial class MainWindow : Window
     {
         /// <summary>
+        /// 
+        /// </summary>
+        User user = new User();
+
+        /// <summary>
         /// Variables that sets the area around the hand
         /// </summary>
         private int areaTop = -60;
@@ -25,6 +30,9 @@ namespace VirtualMouse
         private int areaLeft = -60;
         private int areaRight = 60;
 
+        /// <summary>
+        /// Boolean variables to help make event handler more robust
+        /// </summary>
         private bool b_InitializeEnvironment = false;
         private bool b_DefineSurface = false;
         private bool b_ColorPlaneDepthFrame = false;
@@ -383,15 +391,19 @@ namespace VirtualMouse
 
                 if (skeletons.Length != 0)
                 {
+                    short playerIndex = 1;
                     foreach (Skeleton sk in skeletons)
                     {
                         if (sk.TrackingState == SkeletonTrackingState.Tracked)
                         {
+                            user.playerIndex = playerIndex;
+                            user.trackingId = sk.TrackingId;
                             Point pointer = SkeletonPointToScreen(sk.Joints[JointType.HandLeft].Position);
                             surfaceDetection.definitionPoint = pointer;
                             Canvas.SetTop(this.indicator, (pointer.Y + this.indicator.Height) / 2);
                             Canvas.SetLeft(this.indicator, (pointer.X + this.indicator.Width) / 2);
                         }
+                        playerIndex++;
                     }
                 }
             }
@@ -431,23 +443,32 @@ namespace VirtualMouse
                         short depth = depthImageData[i].Depth;
                         byte intensity = (byte) (depth >= minDepth && depth <= maxDepth ? depth : 0);
 
-                        // Get x,y,z cordiantes
-                        x = i % 640;
-                        y = (i - x) / 640;
-                        distance = surfaceDetection.surface.DistanceToPoint(x, y, (double)depth);
-
                         //bool surf = this.surfaceMatrix[i] >= 0 ? true : false;
-                        if (distance < 10)
+                        if (user.playerIndex == depthImageData[i].PlayerIndex)
                         {
-                            this.depthImageColor[colorPixelIndex++] = (byte) (255 - distance); // Write the blue byte
-                            this.depthImageColor[colorPixelIndex++] = 0; // Write the green byte
-                            this.depthImageColor[colorPixelIndex++] = 0; // Write the red byte
+                            // Get x,y,z cordiantes
+                            x = i % 640;
+                            y = (i - x) / 640;
+                            distance = surfaceDetection.surface.DistanceToPoint(x, y, (double)depth);
+                            if (distance < 7)
+                            {
+                                this.depthImageColor[colorPixelIndex++] = intensity;  // Write the blue byte
+                                this.depthImageColor[colorPixelIndex++] = 0;  // Write the green byte
+                                this.depthImageColor[colorPixelIndex++] = 0;  // Write the red byte
+                            }
+                            else
+                            {
+                                this.depthImageColor[colorPixelIndex++] = 0;  // Write the blue byte
+                                this.depthImageColor[colorPixelIndex++] = 0;  // Write the green byte
+                                this.depthImageColor[colorPixelIndex++] = intensity;  // Write the red byte
+                            }
+
                         }
                         else
                         {
-                            this.depthImageColor[colorPixelIndex++] = intensity; // Write the blue byte
-                            this.depthImageColor[colorPixelIndex++] = intensity; // Write the green byte
-                            this.depthImageColor[colorPixelIndex++] = intensity; // Write the red byte
+                            this.depthImageColor[colorPixelIndex++] = intensity;  // Write the red byte
+                            this.depthImageColor[colorPixelIndex++] = intensity;  // Write the red byte
+                            this.depthImageColor[colorPixelIndex++] = intensity;  // Write the red byte
                         }
 
                         // We're otuputting BGR, the last byte in teh 32 bits is unused so skip it 

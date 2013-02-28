@@ -31,19 +31,22 @@ namespace VirtualMouse
 
         public Plane getSurface()
         {
+            int range = 4;
+
             int index = Helper.Point2DepthIndex(definitionPoint);
             short depth = emptyFrame[index].Depth;
             this.origin = new Vector(definitionPoint.X, definitionPoint.Y, (double)depth);
 
             Point point1 = new Point(definitionPoint.X - distance, definitionPoint.Y);
             int index1 = Helper.Point2DepthIndex(point1);
-            short depth1 = emptyFrame[index1].Depth;
-            this.sample1 = new Vector(point1.X, point1.Y, (double) depth);
+
+            double depth1 = Helper.GetMostCommonDepthImagePixel(emptyFrame, index, range);
+            this.sample1 = new Vector(point1.X, point1.Y, depth);
 
             Point point2 = new Point(definitionPoint.X, definitionPoint.Y - distance);
             int index2 = Helper.Point2DepthIndex(point2);
-            short depth2 = emptyFrame[index2].Depth;
-            this.sample2 = new Vector(point2.X, point2.Y, (double) depth2);
+            double depth2 = Helper.GetMostCommonDepthImagePixel(emptyFrame, index2, range);
+            this.sample2= new Vector(point2.X, point2.Y, depth2);
 
             this.vectorA = this.sample1.Subtraction(this.origin);
             this.vectorB = this.sample2.Subtraction(this.origin);
