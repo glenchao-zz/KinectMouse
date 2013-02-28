@@ -41,6 +41,7 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="getSurfaceButton" Content="Get Surface" Click="GetSurfaceButton_Click" />
+                <Button x:Name="modeButton" Content="Surface Mode" Click="ModeButton_Click"/>
             </StackPanel>
         </StackPanel>
         <DockPanel x:Name="dockPanel" Grid.Row="3" Grid.Column="1" LastChildFill="True">

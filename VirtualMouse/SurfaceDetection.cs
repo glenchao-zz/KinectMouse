@@ -45,7 +45,8 @@ namespace VirtualMouse
 
             Point point2 = new Point(definitionPoint.X, definitionPoint.Y - distance);
             int index2 = Helper.Point2DepthIndex(point2);
-            double depth2 = Helper.GetMostCommonDepthImagePixel(emptyFrame, index2, range);
+            //double depth2 = Helper.GetMostCommonDepthImagePixel(emptyFrame, index2, range);
+            double depth2 = emptyFrame[index2].Depth;
             this.sample2= new Vector(point2.X, point2.Y, depth2);
 
             this.vectorA = this.sample1.Subtraction(this.origin);

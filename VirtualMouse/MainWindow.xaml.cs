@@ -450,7 +450,7 @@ namespace VirtualMouse
                             x = i % 640;
                             y = (i - x) / 640;
                             distance = surfaceDetection.surface.DistanceToPoint(x, y, (double)depth);
-                            if (distance < 7)
+                            if (distance < 10)
                             {
                                 this.depthImageColor[colorPixelIndex++] = intensity;  // Write the blue byte
                                 this.depthImageColor[colorPixelIndex++] = 0;  // Write the green byte
@@ -512,6 +512,8 @@ namespace VirtualMouse
             }
 
             // unhook all event handlers
+            b_TrackFinger = false;
+            this.sensor.AllFramesReady -= TrackFingers;
             b_DefineSurface = false;
             this.sensor.SkeletonFrameReady -= DefineSurface;
             b_ColorPlaneDepthFrame = false;
@@ -555,6 +557,27 @@ namespace VirtualMouse
             catch (InvalidCastException ex)
             {
                 DebugMsg("Near field mode: " + ex.Message);
+            }
+        }
+
+        private void ModeButton_Click(object sender, RoutedEventArgs e)
+        {
+            bool surfaceMode = (string)this.modeButton.Content == "Surface Mode" ? true : false;
+
+            b_ColorPlaneDepthFrame = !surfaceMode;
+            b_TrackFinger = surfaceMode;
+
+            if (surfaceMode)
+            {
+                this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
+                this.sensor.AllFramesReady += TrackFingers;
+                this.modeButton.Content = "Finger Mode";
+            }
+            else
+            {
+                this.sensor.AllFramesReady -= TrackFingers;
+                this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
+                this.modeButton.Content = "Surface Mode";
             }
         }
 
