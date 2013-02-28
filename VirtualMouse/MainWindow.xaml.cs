@@ -17,10 +17,12 @@ namespace VirtualMouse
     /// </summary>
     public partial class MainWindow : Window
     {
-        private SurfaceDetection surfaceDetection = new SurfaceDetection();
-        private FingerTracking fingerTracking = new FingerTracking();
-        private int areaTop = -50;
-        private int areaBot = 70;
+        /// <summary>
+        /// Variables that sets the area around the hand
+        /// </summary>
+        private int areaTop = -60;
+
+        private int areaBot = 60;
         private int areaLeft = -60;
         private int areaRight = 60;
 
@@ -39,9 +41,23 @@ namespace VirtualMouse
         private KinectSensor sensor;
 
         /// <summary>
-        /// Bitmaps that will hold color and depth info
+        /// Bitmaps that will hold depth info
         /// </summary>
         private WriteableBitmap depthBitmap;
+
+        private WriteableBitmap depthBitmap_debug;
+
+        /// <summary>
+        /// Buffers for the depth data received from the camera
+        /// </summary>
+        private DepthImagePixel[] depthImageData;
+
+        /// <summary>
+        /// Byte array that actually stores the color to draw
+        /// </summary>
+        private byte[] depthImageColor;
+
+        private byte[] depthImageColor_debug;
 
         /// <summary>
         /// Bitmaps that will hold color and depth info for finger tracking
@@ -49,11 +65,19 @@ namespace VirtualMouse
         private WriteableBitmap fingerBitmap;
 
         /// <summary>
-        /// Buffers for the color and depth data received from the camera
+        /// Surface detection object that handles all the detection methods
         /// </summary>
-        private DepthImagePixel[] depthImagePixels;
+        private SurfaceDetection surfaceDetection = new SurfaceDetection();
 
-        private byte[] depthPixels;
+        /// <summary>
+        /// Finger tracking object
+        /// </summary>
+        private FingerTracking fingerTracking = new FingerTracking();
+
+        /// <summary>
+        /// Binary matrix for the surface
+        /// </summary>
+        private int[] surfaceMatrix;
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class
@@ -81,15 +105,15 @@ namespace VirtualMouse
 
             if (this.sensor != null)
             {
-                //enable skeleton and depth frames
-                this.sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
+                // Kinect settings
                 this.sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
                 this.sensor.SkeletonStream.Enable();
                 this.sensor.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
-
                 // Allocate space to put the pixels we'll receive
-                this.depthPixels = new byte[this.sensor.DepthStream.FramePixelDataLength*sizeof (int)];
-                this.depthImagePixels = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
+                this.depthImageData = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
+                this.depthImageColor = new byte[this.sensor.DepthStream.FramePixelDataLength*sizeof (int)];
+                this.depthImageColor_debug = new byte[this.sensor.DepthStream.FramePixelDataLength*sizeof (int)];
+                this.surfaceMatrix = new int[this.sensor.DepthStream.FramePixelDataLength*sizeof (int)];
 
                 // Initialize the bitmap we'll display on-screen 
                 this.depthBitmap = new WriteableBitmap(this.sensor.DepthStream.FrameWidth,
@@ -98,6 +122,12 @@ namespace VirtualMouse
                                                        96.0,
                                                        PixelFormats.Bgr32,
                                                        null);
+                this.depthBitmap_debug = new WriteableBitmap(this.sensor.DepthStream.FrameWidth,
+                                                             this.sensor.DepthStream.FrameHeight,
+                                                             96.0,
+                                                             96.0,
+                                                             PixelFormats.Bgr32,
+                                                             null);
                 this.fingerBitmap = new WriteableBitmap(this.sensor.DepthStream.FrameWidth,
                                                         this.sensor.DepthStream.FrameHeight,
                                                         96.0,
@@ -105,12 +135,12 @@ namespace VirtualMouse
                                                         PixelFormats.Bgr32,
                                                         null);
 
-
                 // Set the depth image we display to point to the bitmap where we'll put the image data
                 this.depthImage.Source = this.depthBitmap;
+                this.depthImage_debug.Source = this.depthBitmap_debug;
 
                 // Set the finger image source
-                this.fingerImage.Source = this.fingerBitmap;
+                //this.fingerImage.Source = this.fingerBitmap;
 
                 // Add an event handler to be called whenever there is a color, depth, or skeleton frame data is ready
                 //this.sensor.AllFramesReady += sensor_AllFramesReady;
@@ -127,7 +157,7 @@ namespace VirtualMouse
                     DebugMsg(ex.Message);
                 }
 
-                nearFieldButton_Click(null, null);
+                NearFieldButton_Click(null, null);
             }
 
             if (this.sensor == null)
@@ -147,7 +177,11 @@ namespace VirtualMouse
                 this.sensor.Stop();
         }
 
-        //use depth frame ready on initialization to get background info without user
+        /// <summary>
+        /// Initialized the environment to get ready for surface detection. User should be away from the surface.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void sensor_DepthFrameReady(object sender, DepthImageFrameReadyEventArgs e)
         {
             if (surfaceDetection.emptyFrame != null)
@@ -157,11 +191,36 @@ namespace VirtualMouse
             {
                 if (depthFrame != null)
                 {
-                    depthFrame.CopyDepthImagePixelDataTo(this.depthImagePixels);
-                    surfaceDetection.emptyFrame = new DepthImagePixel[depthImagePixels.Length];
-                    surfaceDetection.playerFrame = new DepthImagePixel[depthImagePixels.Length];
-                    this.depthImagePixels.CopyTo(surfaceDetection.emptyFrame, 0);
+                    surfaceDetection.emptyFrame = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
+                    depthFrame.CopyDepthImagePixelDataTo(surfaceDetection.emptyFrame);
                     DebugMsg("Background depth frame captured");
+
+                    // Get the min and max reliable depth for the current frame
+                    int minDepth = depthFrame.MinDepth;
+                    int maxDepth = depthFrame.MaxDepth;
+
+                    // Convert the depth to RGB 
+                    int colorPixelIndex = 0;
+                    for (int i = 0; i < this.sensor.DepthStream.FramePixelDataLength; ++i)
+                    {
+                        // Get the depth for this pixel 
+                        short depth = surfaceDetection.emptyFrame[i].Depth;
+                        byte intensity = (byte) (depth >= minDepth && depth <= maxDepth ? depth : 0);
+                        this.depthImageColor_debug[colorPixelIndex++] = intensity; // Write the blue byte
+                        this.depthImageColor_debug[colorPixelIndex++] = intensity; // Write the green byte
+                        this.depthImageColor_debug[colorPixelIndex++] = intensity; // Write the red byte
+
+                        // We're otuputting BGR, the last byte in teh 32 bits is unused so skip it 
+                        // If we were outputting BGRA, we would write alpha here.
+                        ++colorPixelIndex;
+                    }
+
+                    // Write the pixel data into our bitmap
+                    this.depthBitmap_debug.WritePixels(
+                        new Int32Rect(0, 0, this.depthBitmap.PixelWidth, this.depthBitmap.PixelHeight),
+                        this.depthImageColor_debug,
+                        this.depthBitmap.PixelWidth*sizeof (int),
+                        0);
                 }
             }
             this.sensor.DepthFrameReady -= sensor_DepthFrameReady;
@@ -169,6 +228,12 @@ namespace VirtualMouse
             bool_allFramesReady = true;
         }
 
+
+        /// <summary>
+        /// Select the surface by user the user's hand
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void sensor_AllFramesReady(object sender, AllFramesReadyEventArgs e)
         {
             if (!bool_allFramesReady)
@@ -204,21 +269,21 @@ namespace VirtualMouse
                 if (depthFrame != null)
                 {
                     // Copy the pixel data from the image to a temp array 
-                    depthFrame.CopyDepthImagePixelDataTo(this.depthImagePixels);
+                    depthFrame.CopyDepthImagePixelDataTo(this.depthImageData);
 
                     // Get the min and max reliable depth for the current frame
                     int minDepth = depthFrame.MinDepth;
                     int maxDepth = depthFrame.MaxDepth;
 
                     // Convert the depth to RGB 
-                    for (int i = 0; i < this.depthPixels.Length; i++)
+                    for (int i = 0; i < this.depthImageColor.Length; i++)
                     {
-                        this.depthPixels[i] = 0;
+                        this.depthImageColor[i] = 0;
                     }
 
                     // Make a copy of the depthPixels to display fingerBitmap
-                    byte[] fingerPixels = new byte[depthPixels.Length];
-                    depthPixels.CopyTo(fingerPixels, 0);
+                    byte[] fingerImageColor = new byte[depthImageColor.Length];
+                    depthImageColor.CopyTo(fingerImageColor, 0);
                     bool[] binaryArray = new bool[120*120];
                     int binArrIndex = 0;
 
@@ -226,8 +291,6 @@ namespace VirtualMouse
                     {
                         // store area of interest in current frame 
                         surfaceDetection.jointPoint = jointPoint;
-                        this.depthImagePixels.CopyTo(surfaceDetection.playerFrame, 0);
-
                         // hard coded area around the hand, need to fix this 
                         for (int i = areaLeft; i < areaRight; i++)
                         {
@@ -235,70 +298,129 @@ namespace VirtualMouse
                             {
                                 // changing (x,y) indices to array index
                                 int index = 4*(640*((int) jointPoint.Y + j) + (int) jointPoint.X + i);
-                                if ((index)/4 >= depthImagePixels.Length || (index - 1)/4 < 0)
+                                if ((index)/4 >= depthImageData.Length || (index)/4 < 0)
                                     continue;
 
-                                short depth = depthImagePixels[(index)/4].Depth;
+                                short depth = depthImageData[(index)/4].Depth;
                                 byte intensity = (byte) (depth >= minDepth && depth <= maxDepth ? depth : 0);
 
-                                if (index < depthPixels.Length && index > 0)
-                                {
-                                    if (this.depthImagePixels[(index)/4].PlayerIndex == 0)
+                                if (index < depthImageColor.Length && index > 0)
+                                    if (this.depthImageData[(index)/4].PlayerIndex == 1)
                                     {
-                                        this.depthPixels[index] = intensity;
+                                        this.depthImageColor[index] = intensity;
                                         binaryArray[binArrIndex++] = false;
                                     }
                                     else
                                     {
-                                        this.depthPixels[index] = intensity;
-                                        this.depthPixels[index + 1] = intensity;
-                                        this.depthPixels[index + 2] = intensity;
+                                        this.depthImageColor[index] = intensity;
+                                        this.depthImageColor[index + 1] = intensity;
+                                        this.depthImageColor[index + 2] = intensity;
                                         binaryArray[binArrIndex++] = true;
                                     }
-                                }
                             }
                         }
 
-                        fingerTracking.parseBinArray(binaryArray);
-                        for (int i = areaLeft; i < areaRight; i++)
-                        {
-                            for (int j = areaTop; j < areaBot; j++)
-                            {
-                                // changing (x,y) indices to array index
-                                int index = 4*(640*((int) jointPoint.Y + j) + (int) jointPoint.X + i);
-                                if ((index)/4 >= depthImagePixels.Length || (index)/4 < 0)
-                                    continue;
-
-                                short depth = depthImagePixels[(index)/4].Depth;
-                                byte intensity = (byte) (depth >= minDepth && depth <= maxDepth ? depth : 0);
-
-                                if (index < depthPixels.Length && index > 0)
-                                {
-                                    if (this.depthImagePixels[(index)/4].PlayerIndex > 0 &&
-                                        fingerTracking.isContour(i - areaLeft, j - areaTop))
-                                    {
-                                        fingerPixels[index + 1] = intensity;
-                                    }
-                                }
-                            }
-                        }
+//                        fingerTracking.parseBinArray(binaryArray);
+//                        for (int i = areaLeft; i < areaRight; i++)
+//                        {
+//                            for (int j = areaTop; j < areaBot; j++)
+//                            {
+//                                // changing (x,y) indices to array index
+//                                int index = 4 * (640 * ((int)jointPoint.Y + j) + (int)jointPoint.X + i);
+//                                if ((index) / 4 >= depthImageData.Length || (index) / 4 < 0)
+//                                    continue;
+//
+//                                short depth = depthImageData[(index) / 4].Depth;
+//                                byte intensity = (byte)(depth >= minDepth && depth <= maxDepth ? depth : 0);
+//
+//                                if (index < depthImageColor.Length && index > 0)
+//                                {
+//                                    if (this.depthImageData[(index)/4].PlayerIndex > 0 &&
+//                                        fingerTracking.isContour(i - areaLeft, j - areaTop))
+//                                    {
+//                                        fingerImageColor[index + 1] = intensity;
+//                                    }
+//                                }
+//                            }
+//                        }
                     }
 
                     // Write the pixel data into our bitmap
                     this.depthBitmap.WritePixels(
                         new Int32Rect(0, 0, this.depthBitmap.PixelWidth, this.depthBitmap.PixelHeight),
-                        this.depthPixels,
+                        this.depthImageColor,
                         this.depthBitmap.PixelWidth*sizeof (int),
                         0);
 
                     // Write the finger pixel data to bitmap
-                    this.fingerBitmap.WritePixels(
-                        new Int32Rect(0, 0, fingerBitmap.PixelWidth, fingerBitmap.PixelHeight),
-                        fingerPixels,
-                        fingerBitmap.PixelWidth*sizeof (int),
+//                    this.fingerBitmap.WritePixels(
+//                        new Int32Rect(0, 0, fingerBitmap.PixelWidth, fingerBitmap.PixelHeight),
+//                        fingerImageColor,
+//                        fingerBitmap.PixelWidth*sizeof (int),
+//                        0);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Render the surface selected
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void sensor_ColorPlaneDepthFrame(object sender, DepthImageFrameReadyEventArgs e)
+        {
+            using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
+            {
+                if (depthFrame != null)
+                {
+                    // Copy the pixel data from the image to a temp array 
+                    depthFrame.CopyDepthImagePixelDataTo(this.depthImageData);
+
+                    // Get the min and max reliable depth for the current frame
+                    int minDepth = depthFrame.MinDepth;
+                    int maxDepth = depthFrame.MaxDepth;
+
+                    // Convert the depth to RGB 
+                    int colorPixelIndex = 0;
+                    for (int i = 0; i < this.depthImageData.Length; ++i)
+                    {
+                        // Get the depth for this pixel 
+                        short depth = depthImageData[i].Depth;
+                        byte intensity = (byte) (depth >= minDepth && depth <= maxDepth ? depth : 0);
+
+                        // Get x,y,z cordiantes
+                        double x = i%640;
+                        double y = (i - x)/640;
+                        double distance = surfaceDetection.surface.DistanceToPoint(x, y, (double) depth);
+
+                        //bool surf = this.surfaceMatrix[i] >= 0 ? true : false;
+                        if (distance < 10)
+                        {
+                            this.depthImageColor[colorPixelIndex++] = (byte) (255 - distance); // Write the blue byte
+                            this.depthImageColor[colorPixelIndex++] = 0; // Write the green byte
+                            this.depthImageColor[colorPixelIndex++] = 0; // Write the red byte
+                        }
+                        else
+                        {
+                            this.depthImageColor[colorPixelIndex++] = intensity; // Write the blue byte
+                            this.depthImageColor[colorPixelIndex++] = intensity; // Write the green byte
+                            this.depthImageColor[colorPixelIndex++] = intensity; // Write the red byte
+                        }
+
+                        // We're otuputting BGR, the last byte in teh 32 bits is unused so skip it 
+                        // If we were outputting BGRA, we would write alpha here.
+                        ++colorPixelIndex;
+                    }
+
+                    // Write the pixel data into our bitmap
+                    this.depthBitmap.WritePixels(
+                        new Int32Rect(0, 0, this.depthBitmap.PixelWidth, this.depthBitmap.PixelHeight),
+                        this.depthImageColor,
+                        this.depthBitmap.PixelWidth * sizeof(int),
                         0);
                 }
             }
+            //this.sensor.DepthFrameReady -= sensor_ColorPlaneDepthFrame;
         }
 
         /// <summary>
@@ -314,77 +436,35 @@ namespace VirtualMouse
             return new Point(depthPoint.X, depthPoint.Y);
         }
 
-        private void getSurfacebutton_Click(object sender, RoutedEventArgs e)
+        private void GetSurfaceButton_Click(object sender, RoutedEventArgs e)
         {
-            if (surfaceDetection == null || surfaceDetection.emptyFrame == null || surfaceDetection.playerFrame == null)
+            if (surfaceDetection == null || surfaceDetection.emptyFrame == null || surfaceDetection.jointPoint == null)
+            {
+                DebugMsg("emptyFrame or playerFrame is null");
                 return;
+            }
+            this.sensor.DepthFrameReady -= sensor_ColorPlaneDepthFrame;
             Plane surface = surfaceDetection.getSurface();
-            DebugMsg(String.Format("x: {0}, y: {1}, z: {2}, d: {3}", surface.normal.x, surface.normal.y,
-                                   surface.normal.z, surface.d));
+            this.surfaceMatrix = surfaceDetection.getSurfaceMatrix();
+            Vector origin = surfaceDetection.origin;
+            Vector vA = surfaceDetection.vectorA;
+            Vector vB = surfaceDetection.vectorB;
+            Helper.DrawLine(origin.x, (origin.x + vA.x), origin.y, (origin.y + vA.y), Colors.Red, this.canvas_debug);
+            Helper.DrawLine(origin.x, (origin.x + vB.x), origin.y, (origin.y + vB.y), Colors.Red, this.canvas_debug);
+
+            DebugMsg("Origin   -- " + origin.ToString());
+            DebugMsg("Sample1  -- " + surfaceDetection.sample1.ToString());
+            DebugMsg("Sample2  -- " + surfaceDetection.sample2.ToString());
+            DebugMsg("VectorA  -- " + vA.ToString());
+            DebugMsg("VectorB  -- " + vB.ToString());
+            DebugMsg("Surface  -- " + surface.ToString());
+
             this.sensor.AllFramesReady -= sensor_AllFramesReady;
             bool_allFramesReady = false;
             this.sensor.DepthFrameReady += sensor_ColorPlaneDepthFrame;
         }
 
-        private void sensor_ColorPlaneDepthFrame(object sender, DepthImageFrameReadyEventArgs e)
-        {
-            using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
-            {
-                if (depthFrame != null)
-                {
-                    // Copy the pixel data from the image to a temp array 
-                    depthFrame.CopyDepthImagePixelDataTo(this.depthImagePixels);
-
-                    // Get the min and max reliable depth for the current frame
-                    int minDepth = depthFrame.MinDepth;
-                    int maxDepth = depthFrame.MaxDepth;
-
-                    // Convert the depth to RGB 
-                    int colorPixelIndex = 0;
-                    for (int i = 0; i < this.depthImagePixels.Length; ++i)
-                    {
-                        // Get the depth for this pixel 
-                        short depth = depthImagePixels[i].Depth;
-                        byte intensity = (byte) (depth >= minDepth && depth <= maxDepth ? depth : 0);
-                        double X = i%640;
-                        double Y = (i - X)/640;
-                        Vector v = new Vector(X, Y, (double) depth);
-                        double diff = surfaceDetection.surface.IsOnPlane(v);
-                        if (diff < 50)
-                        {
-                            this.depthPixels[colorPixelIndex++] = intensity; // Write the blue byte
-                            this.depthPixels[colorPixelIndex++] = 0; // Write the green byte
-                            this.depthPixels[colorPixelIndex++] = 0; // Write the red byte
-                        }
-                        else
-                        {
-                            this.depthPixels[colorPixelIndex++] = intensity; // Write the blue byte
-                            this.depthPixels[colorPixelIndex++] = intensity; // Write the green byte
-                            this.depthPixels[colorPixelIndex++] = intensity; // Write the red byte
-                        }
-
-                        //this.depthPixels[colorPixelIndex++] = intensity;  // Write the blue byte
-                        //this.depthPixels[colorPixelIndex++] = intensity;  // Write the green byte
-                        //this.depthPixels[colorPixelIndex++] = intensity;  // Write the red byte
-
-
-                        // We're otuputting BGR, the last byte in teh 32 bits is unused so skip it 
-                        // If we were outputting BGRA, we would write alpha here.
-                        ++colorPixelIndex;
-                    }
-
-                    // Write the pixel data into our bitmap
-                    this.depthBitmap.WritePixels(
-                        new Int32Rect(0, 0, this.depthBitmap.PixelWidth, this.depthBitmap.PixelHeight),
-                        this.depthPixels,
-                        this.depthBitmap.PixelWidth*sizeof (int),
-                        0);
-                }
-            }
-            //this.sensor.DepthFrameReady -= sensor_ColorPlaneDepthFrame;
-        }
-
-        private void nearFieldButton_Click(object sender, RoutedEventArgs e)
+        private void NearFieldButton_Click(object sender, RoutedEventArgs e)
         {
             // Try to use near mode if possible 
             try
@@ -414,3 +494,4 @@ namespace VirtualMouse
         }
     }
 }
+
