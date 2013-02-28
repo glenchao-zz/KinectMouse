@@ -15,7 +15,7 @@ namespace VirtualMouse
         
         //}
         public DepthImagePixel[] emptyFrame { get; set; }
-        public int[] surfacePixels { get; set; }
+        public int[] surfaceMatrix { get; set; }
         public Point jointPoint { get; set; }
         public Vector origin { get; set; }
         public Vector sample1 { get; set; }
@@ -52,27 +52,27 @@ namespace VirtualMouse
             return this.surface;
         }
 
-        public int[] getSurfaceFrame()
+        public int[] getSurfaceMatrix()
         {
-            this.surfacePixels = new int[emptyFrame.Length];
+            this.surfaceMatrix = new int[emptyFrame.Length];
             for (int i = 0; i < this.emptyFrame.Length; ++i)
             {
-                // Get the depth for this pixel 
-                short depth = emptyFrame[i].Depth;
-                double X = i % 640;
-                double Y = (i - X) / 640;
-                Vector v = new Vector(X, Y, (double)depth);
-                double diff = this.surface.IsOnPlane(v);
+                //find x,y,z cordinates 
+                double x = i % 640;
+                double y = (i - x) / 640;
+                double z = (double)emptyFrame[i].Depth;
+
+                double diff = this.surface.DistanceToPoint(x, y, z);
                 if (diff < 10)
                 {
-                    this.surfacePixels[i] = (byte)diff;  // Write the blue byte
+                    this.surfaceMatrix[i] = (byte)diff;
                 }
                 else
                 {
-                    this.surfacePixels[i] = -1;  // Write the blue byte
+                    this.surfaceMatrix[i] = -1; 
                 }
             }
-            return this.surfacePixels;
+            return this.surfaceMatrix;
         }
     }
 
@@ -100,9 +100,14 @@ namespace VirtualMouse
                               this.x*v.y - this.y*v.x);
         }
 
+        public double DotProduct(double x, double y, double z)
+        {
+            return this.x * x + this.y * y + this.z * z;
+        }
+
         public double DotProduct(Vector v)
         {
-            return this.x * v.x + this.y * v.y + this.z * v.z;
+            return this.DotProduct(v.x, v.y, v.z);
         }
 
         public Vector Normalize()
@@ -116,7 +121,7 @@ namespace VirtualMouse
             double x = Math.Round(this.x, 2);
             double y = Math.Round(this.y, 2);
             double z = Math.Round(this.z, 2);
-            return String.Format("X: {0}, Y: {1}, Z: {2}", x, y, z);
+            return String.Format("x: {0}, y: {1}, z: {2}", x, y, z);
         }
     }
 
@@ -137,11 +142,14 @@ namespace VirtualMouse
             this.d = this.normal.DotProduct(v);
         }
 
-        public double IsOnPlane(Vector v)
+        public double DistanceToPoint(double x, double y, double z)
         {
-            double diff = Math.Abs(this.normal.DotProduct(v) - this.d);;
-            //return diff < 1000 ? true : false;
-            return diff;
+            return Math.Abs(this.normal.DotProduct(x, y, z) - this.d);
+        }
+
+        public double DistanceToPoint(Vector v)
+        {
+            return this.DistanceToPoint(v.x, v.y, v.z);
         }
 
         public override string ToString()

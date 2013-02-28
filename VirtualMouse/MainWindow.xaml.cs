@@ -325,10 +325,16 @@ namespace VirtualMouse
                         // Get the depth for this pixel 
                         short depth = depthImageData[i].Depth;
                         byte intensity = (byte)(depth >= minDepth && depth <= maxDepth ? depth : 0);
-                        bool surf = this.surfaceMatrix[i] >= 0 ? true : false;
-                        if (surf)
+
+                        // Get x,y,z cordiantes
+                        double x = i % 640;
+                        double y = (i - x) / 640;
+                        double distance = surfaceDetection.surface.DistanceToPoint(x, y, (double)depth);
+
+                        //bool surf = this.surfaceMatrix[i] >= 0 ? true : false;
+                        if (distance < 10)
                         {
-                            this.depthImageColor[colorPixelIndex++] = (byte)(255 - this.surfaceMatrix[i]);  // Write the blue byte
+                            this.depthImageColor[colorPixelIndex++] = (byte)(255 - distance);  // Write the blue byte
                             this.depthImageColor[colorPixelIndex++] = 0;  // Write the green byte
                             this.depthImageColor[colorPixelIndex++] = 0;  // Write the red byte
                         }
@@ -376,7 +382,7 @@ namespace VirtualMouse
             }
             this.sensor.DepthFrameReady -= sensor_ColorPlaneDepthFrame;
             Plane surface = surfaceDetection.getSurface();
-            this.surfaceMatrix = surfaceDetection.getSurfaceFrame();
+            this.surfaceMatrix = surfaceDetection.getSurfaceMatrix();
             Vector origin = surfaceDetection.origin;
             Vector vA = surfaceDetection.vectorA; 
             Vector vB = surfaceDetection.vectorB;
