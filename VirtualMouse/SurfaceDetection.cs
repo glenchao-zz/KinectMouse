@@ -103,7 +103,6 @@ namespace VirtualMouse
         public double IsOnPlane(Vector v)
         {
             double diff = Math.Abs(this.normal.DotProduct(v) - this.d);;
-            //return diff < 1000 ? true : false;
             return diff;
         }
     }
