@@ -25,10 +25,10 @@ namespace VirtualMouse
         /// <summary>
         /// Variables that sets the area around the hand
         /// </summary>
-        private int areaTop = -60;
-        private int areaBot = 60;
-        private int areaLeft = -60;
-        private int areaRight = 60;
+        private int areaTop = -100;
+        private int areaBot = 100;
+        private int areaLeft = -100;
+        private int areaRight = 100;
 
         /// <summary>
         /// Boolean variables to help make event handler more robust
@@ -117,6 +117,7 @@ namespace VirtualMouse
             if (this.sensor != null)
             {
                 // Kinect settings
+                this.sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
                 this.sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
                 this.sensor.SkeletonStream.Enable(
                     new TransformSmoothParameters(){
