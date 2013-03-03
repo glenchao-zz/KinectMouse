@@ -28,9 +28,7 @@
             <Viewbox Stretch="Uniform">
                 <Image x:Name="depthImage_debug" Width="320" Height="240" />
             </Viewbox>
-            <Canvas x:Name="canvas_debug" Width="320" Height="240">
-                <Ellipse x:Name="indicator" Width="10" Height="10" Fill="Red"/>
-            </Canvas>
+            <Canvas x:Name="canvas_debug" Width="320" Height="240" MouseDown="canvas_debug_MouseDown" Background="Transparent"></Canvas>
         </Grid>
         <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform">
             <Image x:Name="depthImage_indicator" Width="320" Height="240" />
@@ -42,7 +40,6 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="initEnvButton" Content="Initialize Environment" Click="InitializeEnvironmentButton_Click" />
-                <Button x:Name="defineSurfaceButton" Content="Define Surface" Click="DefineSurfaceButton_Click" Visibility="Collapsed"/>
                 <Button x:Name="modeButton" Content="Surface Mode" Click="ModeButton_Click"/>
             </StackPanel>
         </StackPanel>

@@ -9,6 +9,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Kinect;
 using System.Collections.Generic;
+using System.Windows.Input;
 
 namespace VirtualMouse
 {
@@ -34,7 +35,6 @@ namespace VirtualMouse
         /// Boolean variables to help make event handler more robust
         /// </summary>
         private bool b_InitializeEnvironment = false;
-        private bool b_DefineSurface = false;
         private bool b_ColorPlaneDepthFrame = false;
         private bool b_TrackFinger = false;
 
@@ -269,11 +269,6 @@ namespace VirtualMouse
                     this.sensor.DepthFrameReady -= InitializeEnvironment;
                     b_InitializeEnvironment = false;
                     DebugMsg("Hook  up DefineSurface");
-                    this.sensor.SkeletonFrameReady += DefineSurface;
-                    b_DefineSurface = true;
-
-                    this.initEnvButton.Visibility = System.Windows.Visibility.Collapsed;
-                    this.defineSurfaceButton.Visibility = System.Windows.Visibility.Visible;
                 }
             }
         }
@@ -314,8 +309,6 @@ namespace VirtualMouse
                         {
                             handPosition = SkeletonPointToScreen(sk.Joints[JointType.HandLeft].Position);
                             b_joint = true;
-//                            Canvas.SetTop(this.indicator, (handPosition.Y + this.indicator.Height) / 2);
-//                            Canvas.SetLeft(this.indicator, (handPosition.X + this.indicator.Width) / 2);
                         }
                     }
                 }
@@ -386,50 +379,6 @@ namespace VirtualMouse
                         this.fingerImageColor,
                         this.fingerBitmap.PixelWidth * sizeof(int),
                         0);
-                }
-            }
-        }
-
-        /// <summary>
-        /// SkeletonFrameReady event handler to define a surface
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void DefineSurface(object sender, SkeletonFrameReadyEventArgs e)
-        {
-            if (!b_DefineSurface)
-            {
-                this.sensor.SkeletonFrameReady -= DefineSurface;
-                DebugMsg("Blocked DefineSurface");
-                return;
-            }
-
-            //get skeleton frame to get the hand point data 
-            Skeleton[] skeletons = new Skeleton[0];
-            using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
-            {
-                if (skeletonFrame != null)
-                {
-                    skeletons = new Skeleton[skeletonFrame.SkeletonArrayLength];
-                    skeletonFrame.CopySkeletonDataTo(skeletons);
-                }
-
-                if (skeletons.Length != 0)
-                {
-                    short playerIndex = 1;
-                    foreach (Skeleton sk in skeletons)
-                    {
-                        if (sk.TrackingState == SkeletonTrackingState.Tracked)
-                        {
-                            user.playerIndex = playerIndex;
-                            user.trackingId = sk.TrackingId;
-                            Point pointer = SkeletonPointToScreen(sk.Joints[JointType.HandLeft].Position);
-                            surfaceDetection.definitionPoint = pointer;
-                            Canvas.SetTop(this.indicator, (pointer.Y + this.indicator.Height) / 2);
-                            Canvas.SetLeft(this.indicator, (pointer.X + this.indicator.Width) / 2);
-                        }
-                        playerIndex++;
-                    }
                 }
             }
         }
@@ -554,35 +503,18 @@ namespace VirtualMouse
             return new Point(depthPoint.X, depthPoint.Y);
         }
 
-        private void InitializeEnvironmentButton_Click(object sender, RoutedEventArgs e)
+        private void DefineSurface(Point point)
         {
-            b_ColorPlaneDepthFrame = false;
-            this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
-            b_InitializeEnvironment = true;
-            this.sensor.DepthFrameReady += InitializeEnvironment;            
-        }
-
-        private void DefineSurfaceButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (surfaceDetection == null || surfaceDetection.emptyFrame == null || surfaceDetection.definitionPoint == null)
+            if (surfaceDetection.emptyFrame == null)
             {
-                DebugMsg("emptyFrame or playerFrame is null");
+                DebugMsg("Initialize Environment First");
                 return;
             }
-            // toggle buttons
-            this.initEnvButton.Visibility = System.Windows.Visibility.Visible;
-            this.defineSurfaceButton.Visibility = System.Windows.Visibility.Collapsed;
+            point.X *= 2;
+            point.Y *= 2;
+            DebugMsg("X: " + point.X + " Y: " + point.Y);
 
-
-            // unhook all event handlers
-            b_TrackFinger = false;
-            this.sensor.AllFramesReady -= TrackFingers;
-            b_DefineSurface = false;
-            this.sensor.SkeletonFrameReady -= DefineSurface;
-            b_ColorPlaneDepthFrame = false;
-            this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
-            
-            // Compute surface
+            surfaceDetection.definitionPoint = point;
             Plane surface = surfaceDetection.getSurface();
             Helper.SaveSurface(surface);
             DebugMsg("***************************************");
@@ -594,10 +526,27 @@ namespace VirtualMouse
             DebugMsg("Surface  -- " + surface.ToString());
             DebugMsg("***************************************");
 
-            // Hook back up event handler
             b_ColorPlaneDepthFrame = true;
             this.sensor.AllFramesReady += ColorPlaneDepthFrame;
         }
+
+
+
+        /*****************************************************************************************************
+         * 
+         * Button Click Listeners Below  
+         * 
+         ******************************************************************************************************/
+
+
+        private void InitializeEnvironmentButton_Click(object sender, RoutedEventArgs e)
+        {
+            b_ColorPlaneDepthFrame = false;
+            this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
+            b_InitializeEnvironment = true;
+            this.sensor.DepthFrameReady += InitializeEnvironment;            
+        }
+
 
         private void NearFieldButton_Click(object sender, RoutedEventArgs e)
         {
@@ -642,6 +591,12 @@ namespace VirtualMouse
                 this.sensor.AllFramesReady += ColorPlaneDepthFrame;
                 this.modeButton.Content = "Surface Mode";
             }
+        }
+
+        private void canvas_debug_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            Point point = Mouse.GetPosition(canvas_debug);
+            DefineSurface(point);
         }
 
         private void DebugMsg(string msg)
