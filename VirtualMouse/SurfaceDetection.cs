@@ -34,6 +34,8 @@ namespace VirtualMouse
             int range = 4;
 
             int index = Helper.Point2DepthIndex(definitionPoint);
+            if (!emptyFrame[index].IsKnownDepth)
+                return null;
             short depth = emptyFrame[index].Depth;
             this.origin = new Vector(definitionPoint.X, definitionPoint.Y, (double)depth);
 

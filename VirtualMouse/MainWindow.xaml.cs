@@ -510,12 +510,21 @@ namespace VirtualMouse
                 DebugMsg("Initialize Environment First");
                 return;
             }
+
+            b_ColorPlaneDepthFrame = false;
+            this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
+            
             point.X *= 2;
             point.Y *= 2;
             DebugMsg("X: " + point.X + " Y: " + point.Y);
 
             surfaceDetection.definitionPoint = point;
             Plane surface = surfaceDetection.getSurface();
+            if (surface == null)
+            {
+                DebugMsg("Unknown depth. Please try another point");
+                return;
+            }
             Helper.SaveSurface(surface);
             DebugMsg("***************************************");
             DebugMsg("Origin   -- " + surfaceDetection.origin.ToString());
