@@ -48,9 +48,17 @@ namespace VirtualMouse
             return (double)temp;
         }
 
-        public static int Point2DepthIndex(Point point)
+        public static int Point2Index(Point point)
         {
             return 640 * ((int)point.Y) + (int)point.X;
+        }
+
+        public static Point Index2Point(int i)
+        {
+            Point pt = new Point();
+            pt.X = i % 640;
+            pt.Y = (i - pt.X) / 640;
+            return pt;
         }
 
         public static void DrawPoint(double X, double Y, Color color, Canvas canvas)

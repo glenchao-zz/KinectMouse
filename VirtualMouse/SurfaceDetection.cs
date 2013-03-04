@@ -33,20 +33,20 @@ namespace VirtualMouse
         {
             int range = 4;
 
-            int index = Helper.Point2DepthIndex(definitionPoint);
+            int index = Helper.Point2Index(definitionPoint);
             if (!emptyFrame[index].IsKnownDepth)
                 return null;
             short depth = emptyFrame[index].Depth;
             this.origin = new Vector(definitionPoint.X, definitionPoint.Y, (double)depth);
 
             Point point1 = new Point(definitionPoint.X - distance, definitionPoint.Y);
-            int index1 = Helper.Point2DepthIndex(point1);
+            int index1 = Helper.Point2Index(point1);
 
             double depth1 = Helper.GetMostCommonDepthImagePixel(emptyFrame, index, range);
             this.sample1 = new Vector(point1.X, point1.Y, depth);
 
             Point point2 = new Point(definitionPoint.X, definitionPoint.Y - distance);
-            int index2 = Helper.Point2DepthIndex(point2);
+            int index2 = Helper.Point2Index(point2);
             //double depth2 = Helper.GetMostCommonDepthImagePixel(emptyFrame, index2, range);
             double depth2 = emptyFrame[index2].Depth;
             this.sample2= new Vector(point2.X, point2.Y, depth2);
@@ -68,8 +68,8 @@ namespace VirtualMouse
             for (int i = 0; i < this.emptyFrame.Length; ++i)
             {
                 //find x,y,z cordinates 
-                double x = i%640;
-                double y = (i - x)/640;
+                double x = i % 640;
+                double y = (i - x) / 640;
                 double z = (double) emptyFrame[i].Depth;
 
                 double diff = this.surface.DistanceToPoint(x, y, z);
