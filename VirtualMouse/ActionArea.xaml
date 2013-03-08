@@ -9,7 +9,7 @@
             MouseMove="ResizeArea"
             MouseUp="DeselectEllipse"
             MouseLeave="actionCanvas_MouseLeave">
-        <Polygon x:Name="area" Fill="Red" Points="{Binding cornerPoints}"/>
+        <Polygon x:Name="area" Fill="Red" Points="{Binding cornerPoints}" Opacity="0.5"/>
         <Ellipse x:Name="topLeft" Width="10" Height="10" Fill="Blue" 
                  MouseEnter="HighLightCorner" 
                  MouseLeave="UnHighLightCorner" 

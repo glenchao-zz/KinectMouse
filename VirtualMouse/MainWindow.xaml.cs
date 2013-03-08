@@ -133,7 +133,7 @@ namespace VirtualMouse
                 this.sensor.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
                 this.sensor.SkeletonStream.EnableTrackingInNearRange = true;
                 
-                // Set up ActionArea maxLength
+                // Set up ActionArea
                 this.actionArea.maxLength = this.sensor.DepthStream.FramePixelDataLength;
 
                 // Allocate space to put the pixels we'll receive
@@ -186,7 +186,7 @@ namespace VirtualMouse
                     DebugMsg("Save surface settings loaded");
                     DebugMsg(surface.ToString());
                     b_ColorPlaneDepthFrame = true;
-                    this.sensor.AllFramesReady += ColorPlaneDepthFrame;
+                    this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
                 }
                 else
                 {
@@ -391,40 +391,14 @@ namespace VirtualMouse
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ColorPlaneDepthFrame(object sender, AllFramesReadyEventArgs e)
+        private void ColorPlaneDepthFrame(object sender, DepthImageFrameReadyEventArgs e)
         {
             if (!b_ColorPlaneDepthFrame)
             {
-                this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
+                this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
                 DebugMsg("Blocked ColorPlaneDepthFrame");
                 return;
             }
-
-            //get skeleton frame to get the hand point data 
-            Skeleton[] skeletons = new Skeleton[0];
-            using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
-            {
-                if (skeletonFrame != null)
-                {
-                    skeletons = new Skeleton[skeletonFrame.SkeletonArrayLength];
-                    skeletonFrame.CopySkeletonDataTo(skeletons);
-                }
-
-                if (skeletons.Length != 0)
-                {
-                    for (int i = 0; i < skeletons.Length; i++)
-                    {
-                        if (skeletons[i].TrackingState == SkeletonTrackingState.Tracked)
-                        {
-                            user.playerIndex = (short)(i + 1);
-                            user.trackingId = skeletons[i].TrackingId;
-                        }
-                    }
-                }
-            }
-
-            if (user.playerIndex == 0)
-                return; 
 
             using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
             {
@@ -453,24 +427,43 @@ namespace VirtualMouse
 
                         if (this.actionArea.ValidIndeces[i] == 1)
                         {
+                            // Within the action area
                             Point pt = Helper.Index2Point(i);
-                            if (this.surfaceDetection.surface.DistanceToPoint(pt.X, pt.Y, (double)depth) < 5)
+
+                            if (this.surfaceDetection.emptyFrame != null)
                             {
-                                // If distance of pixel is close to the surface within the ActionArea
-                                this.depthImageColor[colorPixelIndex++] = 0;
-                                this.depthImageColor[colorPixelIndex++] = 0;
-                                this.depthImageColor[colorPixelIndex++] = intensity; // Color Red
-                            }
-                            else
-                            {
-                                // If distance of pixel is not close to the surface within the ActionArea
-                                this.depthImageColor[colorPixelIndex++] = intensity; // Color blue
-                                this.depthImageColor[colorPixelIndex++] = 0;
-                                this.depthImageColor[colorPixelIndex++] = 0; 
+                                double percentDiff = Math.Abs(2 * this.surfaceDetection.emptyFrame[i].Depth - depth + 0.0001) / (this.surfaceDetection.emptyFrame[i].Depth + 0.0001);
+                                // Is the hand
+                                if (percentDiff > 1.01) // sketchy numbers... need to tweek 
+                                {
+                                    if (this.surfaceDetection.surface.DistanceToPoint(pt.X, pt.Y, (double)depth) < 5)
+                                    {
+                                        // If distance of pixel is close to the surface within the ActionArea
+                                        this.depthImageColor[colorPixelIndex++] = 0;
+                                        this.depthImageColor[colorPixelIndex++] = 0;
+                                        this.depthImageColor[colorPixelIndex++] = intensity; // Color Red
+                                    }
+                                    else
+                                    {
+                                        // If distance of pixel is not close to the surface within the ActionArea
+                                        this.depthImageColor[colorPixelIndex++] = intensity; // Color blue
+                                        this.depthImageColor[colorPixelIndex++] = 0;
+                                        this.depthImageColor[colorPixelIndex++] = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    // Is not the hand
+                                    this.depthImageColor[colorPixelIndex++] = 0; 
+                                    this.depthImageColor[colorPixelIndex++] = 0;
+                                    this.depthImageColor[colorPixelIndex++] = 0;
+                                }
+
                             }
                         }
                         else
                         {
+                            // Not within the action area
                             this.depthImageColor[colorPixelIndex++] = intensity;  // Write the blue byte
                             this.depthImageColor[colorPixelIndex++] = intensity;  // Write the green byte
                             this.depthImageColor[colorPixelIndex++] = intensity;  // Write the red byte
@@ -486,10 +479,6 @@ namespace VirtualMouse
                         this.depthImageColor,
                         this.depthBitmap.PixelWidth * sizeof(int),
                         0);
-
-                    // Comment this out if your computer can run real time 
-                    //b_ColorPlaneDepthFrame = false;
-                    //this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
                 }
             }
         }
@@ -516,7 +505,7 @@ namespace VirtualMouse
             }
 
             b_ColorPlaneDepthFrame = false;
-            this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
+            this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
             
             point.X *= 2;
             point.Y *= 2;
@@ -540,7 +529,7 @@ namespace VirtualMouse
             DebugMsg("***************************************");
 
             b_ColorPlaneDepthFrame = true;
-            this.sensor.AllFramesReady += ColorPlaneDepthFrame;
+            this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
         }
 
 
@@ -555,7 +544,7 @@ namespace VirtualMouse
         private void InitializeEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
             b_ColorPlaneDepthFrame = false;
-            this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
+            this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
             b_InitializeEnvironment = true;
             this.sensor.DepthFrameReady += InitializeEnvironment;            
         }
@@ -594,14 +583,14 @@ namespace VirtualMouse
 
             if (surfaceMode)
             {
-                this.sensor.AllFramesReady -= ColorPlaneDepthFrame;
+                this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
                 this.sensor.AllFramesReady += TrackFingers;
                 this.modeButton.Content = "Finger Mode";
             }
             else
             {
                 this.sensor.AllFramesReady -= TrackFingers;
-                this.sensor.AllFramesReady += ColorPlaneDepthFrame;
+                this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
                 this.modeButton.Content = "Surface Mode";
             }
         }

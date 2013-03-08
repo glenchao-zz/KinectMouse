@@ -20,7 +20,11 @@ namespace VirtualMouse
     /// </summary>
     public partial class ActionArea : UserControl, INotifyPropertyChanged
     {
-        // general var
+        // Call back on resize
+        public delegate void ResizeEvent();
+        public event ResizeEvent ResizeCallBack;
+
+        // General var
         private const int ellipseWidth = 10;
         public event PropertyChangedEventHandler PropertyChanged;
 
