@@ -47,7 +47,7 @@ namespace VirtualMouse
         /// <summary>
         /// Variables related to corners of the quad
         /// </summary>
-        private enum corners { topLeft, botLeft, botRight, topRight };
+        public enum corners { topLeft, botLeft, botRight, topRight };
         private PointCollection _cornerPoints;
         public PointCollection cornerPoints
         {
