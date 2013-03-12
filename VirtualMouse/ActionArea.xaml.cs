@@ -42,11 +42,14 @@ namespace VirtualMouse
         /// <summary>
         /// Selected ellipse when mouse down, cleared when mouse up
         /// </summary>
-        private Ellipse selectedEllipse = null;
+        private object selectedShape = null;
+
+        private Point downPos = new Point();
 
         /// <summary>
         /// Variables related to corners of the quad
         /// </summary>
+        private PointCollection cornerDelta;
         public enum corners { topLeft, botLeft, botRight, topRight };
         private PointCollection _cornerPoints;
         public PointCollection cornerPoints
@@ -84,14 +87,31 @@ namespace VirtualMouse
 
         private void HighLightCorner(object sender, MouseEventArgs e)
         {
-            Ellipse el = sender as Ellipse;
-            el.Fill = new SolidColorBrush(Colors.Red);
+            if (sender.GetType() == typeof(Ellipse))
+            {
+                Ellipse el = sender as Ellipse;
+                el.Fill = new SolidColorBrush(Colors.Red);
+            }
+            else if (sender.GetType() == typeof(Polygon))
+            {
+                Polygon poly = sender as Polygon;
+                poly.Fill = new SolidColorBrush(Colors.Red);
+            }
+
         }
         
         private void UnHighLightCorner(object sender, MouseEventArgs e)
         {
-            Ellipse el = sender as Ellipse;
-            el.Fill = new SolidColorBrush(Colors.Blue);
+            if (sender.GetType() == typeof(Ellipse))
+            {
+                Ellipse el = sender as Ellipse;
+                el.Fill = new SolidColorBrush(Colors.Blue);
+            }
+            else if (sender.GetType() == typeof(Polygon))
+            {
+                Polygon poly = sender as Polygon;
+                poly.Fill = new SolidColorBrush(Colors.Blue);
+            }
         }
 
         /// <summary>
@@ -99,33 +119,55 @@ namespace VirtualMouse
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SelectEllipse(object sender, MouseButtonEventArgs e)
+        private void SelectShape(object sender, MouseButtonEventArgs e)
         {
-            this.selectedEllipse = sender as Ellipse;
+            this.selectedShape = sender;
+            if (sender.GetType() == typeof(Polygon))
+            {
+                this.downPos = Mouse.GetPosition(this.area);
+                this.cornerDelta = new PointCollection();
+                foreach (Point pt in this.cornerPoints)
+                {
+                    this.cornerDelta.Add(new Point(this.downPos.X - pt.X, this.downPos.Y - pt.Y));
+                }
+            }
         }
 
         private void ResizeArea(object sender, MouseEventArgs e)
         {
-            if (this.selectedEllipse == null || this.ValidIndeces == null)
-                return;
-            
-            Point mouse = Mouse.GetPosition(actionCanvas);
-            Canvas.SetLeft(selectedEllipse, mouse.X);
-            Canvas.SetTop(selectedEllipse, mouse.Y);
+            Ellipse selectedEllipse = this.selectedShape as Ellipse;
+            Point mouse = Mouse.GetPosition(this.actionCanvas);
+            Canvas.SetLeft(selectedEllipse, mouse.X - ellipseWidth / 2);
+            Canvas.SetTop(selectedEllipse, mouse.Y - ellipseWidth / 2);
             Point[] pointArray = new Point[4];
             this.cornerPoints.CopyTo(pointArray, 0);
             int index = actionCanvas.Children.IndexOf(selectedEllipse) - 1;
-            pointArray[index] = cPoint(mouse.X, mouse.Y);
+            pointArray[index] = new Point(mouse.X, mouse.Y);
             this.cornerPoints = new PointCollection(pointArray);
 
-            // Calculate border euqations
-            for (int i = 0; i < cornerPoints.Count; i++)
-            {
-                Point p1 = cornerPoints[i];
-                Point p2 = cornerPoints[(i + 1) % cornerPoints.Count];
-                borderEqs[i] = new lineEq(p1, p2);
-            }
+            GetBorderEquations();
+            GetValidIndices();
+        }
 
+        private void MovePolygon(object sender, MouseEventArgs e)
+        {
+            Point mouse = Mouse.GetPosition(this.actionCanvas);
+            Point[] pointArray = new Point[4];
+            this.cornerPoints.CopyTo(pointArray, 0);
+            for (int i = 0; i < pointArray.Length; i++)
+            {
+                pointArray[i].X = mouse.X - cornerDelta[i].X;
+                pointArray[i].Y = mouse.Y - cornerDelta[i].Y;
+                Canvas.SetLeft(this.actionCanvas.Children[i + 1], pointArray[i].X - ellipseWidth / 2);
+                Canvas.SetTop(this.actionCanvas.Children[i + 1], pointArray[i].Y - ellipseWidth / 2);
+            }
+            this.cornerPoints = new PointCollection(pointArray);
+            GetBorderEquations();
+            GetValidIndices();
+        }
+
+        private void GetValidIndices()
+        {
             // Calculate valid indices 
             for (int i = 0; i < maxLength; i++)
             {
@@ -142,9 +184,31 @@ namespace VirtualMouse
             }
         }
 
-        private void DeselectEllipse(object sender, MouseButtonEventArgs e)
+        private void GetBorderEquations()
         {
-            selectedEllipse = null;
+            // Calculate border euqations
+            for (int i = 0; i < cornerPoints.Count; i++)
+            {
+                Point p1 = cornerPoints[i];
+                Point p2 = cornerPoints[(i + 1) % cornerPoints.Count];
+                borderEqs[i] = new lineEq(p1, p2);
+            }
+        }
+
+        private void actionCanvas_MouseLeave(object sender, MouseEventArgs e)
+        {
+            this.DeselectShape(null, null);
+        }
+
+        private void actionCanvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (this.selectedShape == null || this.ValidIndeces == null)
+                return;
+
+            if (this.selectedShape.GetType() == typeof(Ellipse))
+                ResizeArea(sender, e);
+            else if (this.selectedShape.GetType() == typeof(Polygon))
+                MovePolygon(sender, e);
         }
 
         private Point cPoint(double x, double y)
@@ -152,9 +216,9 @@ namespace VirtualMouse
             return new Point(x + ellipseWidth / 2, y + ellipseWidth / 2);
         }
 
-        private void actionCanvas_MouseLeave(object sender, MouseEventArgs e)
+        private void DeselectShape(object sender, MouseButtonEventArgs e)
         {
-            this.DeselectEllipse(null, null);
+            this.selectedShape = null;
         }
     }
 

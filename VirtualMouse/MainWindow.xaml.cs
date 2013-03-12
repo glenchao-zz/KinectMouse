@@ -424,40 +424,35 @@ namespace VirtualMouse
                         short depth = depthImageData[i].Depth;
                         byte intensity = (byte)(depth >= minDepth && depth <= maxDepth ? depth : 0);
 
-                        if (this.actionArea.ValidIndeces[i] == 1)
+                        if (this.surfaceDetection.emptyFrame != null && this.actionArea.ValidIndeces[i] == 1)
                         {
                             // Within the action area
                             Point pt = Helper.Index2Point(i);
-
-                            if (this.surfaceDetection.emptyFrame != null)
+                            double percentDiff = Math.Abs(2 * this.surfaceDetection.emptyFrame[i].Depth - depth + 0.0001) / (this.surfaceDetection.emptyFrame[i].Depth + 0.0001);
+                            // Is the hand
+                            if (percentDiff > 1.01) // sketchy numbers... need to tweek 
                             {
-                                double percentDiff = Math.Abs(2 * this.surfaceDetection.emptyFrame[i].Depth - depth + 0.0001) / (this.surfaceDetection.emptyFrame[i].Depth + 0.0001);
-                                // Is the hand
-                                if (percentDiff > 1.01) // sketchy numbers... need to tweek 
+                                if (this.surfaceDetection.surface.DistanceToPoint(pt.X, pt.Y, (double)depth) < 5)
                                 {
-                                    if (this.surfaceDetection.surface.DistanceToPoint(pt.X, pt.Y, (double)depth) < 10)
-                                    {
-                                        // If distance of pixel is close to the surface within the ActionArea
-                                        this.depthImageColor[colorPixelIndex++] = 0;
-                                        this.depthImageColor[colorPixelIndex++] = 0;
-                                        this.depthImageColor[colorPixelIndex++] = intensity; // Color Red
-                                    }
-                                    else
-                                    {
-                                        // If distance of pixel is not close to the surface within the ActionArea
-                                        this.depthImageColor[colorPixelIndex++] = intensity; // Color blue
-                                        this.depthImageColor[colorPixelIndex++] = 0;
-                                        this.depthImageColor[colorPixelIndex++] = 0;
-                                    }
+                                    // If distance of pixel is close to the surface within the ActionArea
+                                    this.depthImageColor[colorPixelIndex++] = 0;
+                                    this.depthImageColor[colorPixelIndex++] = 0;
+                                    this.depthImageColor[colorPixelIndex++] = intensity; // Color Red
                                 }
                                 else
                                 {
-                                    // Is not the hand
-                                    this.depthImageColor[colorPixelIndex++] = 0;
+                                    // If distance of pixel is not close to the surface within the ActionArea
+                                    this.depthImageColor[colorPixelIndex++] = intensity; // Color blue
                                     this.depthImageColor[colorPixelIndex++] = 0;
                                     this.depthImageColor[colorPixelIndex++] = 0;
                                 }
-
+                            }
+                            else
+                            {
+                                // Is not the hand
+                                this.depthImageColor[colorPixelIndex++] = 0; 
+                                this.depthImageColor[colorPixelIndex++] = 0;
+                                this.depthImageColor[colorPixelIndex++] = 0;
                             }
                         }
                         else
@@ -497,7 +492,7 @@ namespace VirtualMouse
 
         private void DefineSurface(Point point)
         {
-            if (surfaceDetection.emptyFrame == null)
+            if (this.surfaceDetection.emptyFrame == null || this.actionArea.ValidIndeces == null)
             {
                 DebugMsg("Initialize Environment First");
                 return;
@@ -542,6 +537,9 @@ namespace VirtualMouse
 
         private void InitializeEnvironmentButton_Click(object sender, RoutedEventArgs e)
         {
+            if (this.sensor == null)
+                return;
+
             b_ColorPlaneDepthFrame = false;
             this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
             b_InitializeEnvironment = true;
