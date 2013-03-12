@@ -16,7 +16,7 @@ namespace VirtualMouse
          */
         // Size of the jump after check a possible palm point
         private const int PalmInsideJump = 5;
-        private const double PalmContourJumpPerc = 0.15f;
+        private const double PalmContourJumpPerc = 0.075f;
         // Size of the jump after check a possible fingertip
         //private const int FingerJump = 25;
         // Size of the jump after find a valid fingertips (Percentage over the total)
@@ -37,6 +37,7 @@ namespace VirtualMouse
 
         private List<Point> contourPoints;
         private List<Point> insidePoints;
+        private bool b_Palm;
         private Point palm;
         private List<Point> fingertips;
 
@@ -59,6 +60,11 @@ namespace VirtualMouse
         public Point getPalm()
         {
             return palm;
+        }
+
+        public bool hasPalm()
+        {
+            return b_Palm;
         }
 
         public void parseBinArray(bool[] binaryArray, double minX, double minY, double maxX, double maxY)
@@ -188,24 +194,32 @@ namespace VirtualMouse
         // Find a largest circle in the hand area and label the center as palm
         private void findPalm()
         {
+            b_Palm = false;
             float minDistToContour, largestRadius, distance;
             largestRadius = float.MinValue;
 
+            bool validInside;
             for (int j = 0; j < insidePoints.Count; j += PalmInsideJump)
             {
+                validInside = true;
                 minDistToContour = float.MaxValue;
                 for (int k = 0; k < contourPoints.Count; k += (int)(PalmContourJumpPerc * contourPoints.Count))
                 {
                     distance = distanceEuclidean(insidePoints[j], contourPoints[k]);
-                    if (distance < 50) continue;
+                    if (distance < 19)
+                    {
+                        validInside = false;
+                        break;
+                    }
                     if (!isCircleInside(insidePoints[j], distance)) continue;
                     if (distance < minDistToContour) minDistToContour = distance;
                 }
 
-                if (largestRadius < minDistToContour && minDistToContour != float.MaxValue)
+                if (validInside && largestRadius < minDistToContour && minDistToContour != float.MaxValue)
                 {
                     largestRadius = minDistToContour;
                     palm = insidePoints[j];
+                    b_Palm = true;
                 }
             }
         }
@@ -220,7 +234,7 @@ namespace VirtualMouse
             int i, step = 1;
 
             // Skip if not enough points in contour
-            if (K > numPoints) return;
+            if (K > numPoints || !b_Palm) return;
 
             // Find the fingertips
             for (i = 0; i < numPoints; i += step)
@@ -263,27 +277,27 @@ namespace VirtualMouse
             {
                 return false;
             }
-            int xLeft = (int) (p.X - r/Math.Sqrt(2));
-            int xRight = (int) (p.X + r/Math.Sqrt(2));
-            int yDown = (int) (p.Y - r/Math.Sqrt(2));
-            int yUp = (int) (p.Y + r/Math.Sqrt(2));
-            if (xLeft < 0 || yDown < 0 || xRight >= Width || yUp >= Height) return false;
-            if (!handMatrix[xLeft, yDown])
-            {
-                return false;
-            }
-            if (!handMatrix[xLeft, yUp])
-            {
-                return false;
-            }
-            if (!handMatrix[xRight, yDown])
-            {
-                return false;
-            }
-            if (!handMatrix[xRight, yUp])
-            {
-                return false;
-            }
+//            int xLeft = (int)(p.X - r / Math.Sqrt(2));
+//            int xRight = (int)(p.X + r / Math.Sqrt(2));
+//            int yDown = (int)(p.Y - r / Math.Sqrt(2));
+//            int yUp = (int)(p.Y + r / Math.Sqrt(2));
+//            if (xLeft < 0 || yDown < 0 || xRight >= Width || yUp >= Height) return false;
+//            if (!handMatrix[xLeft, yDown])
+//            {
+//                return false;
+//            }
+//            if (!handMatrix[xLeft, yUp])
+//            {
+//                return false;
+//            }
+//            if (!handMatrix[xRight, yDown])
+//            {
+//                return false;
+//            }
+//            if (!handMatrix[xRight, yUp])
+//            {
+//                return false;
+//            }
 
             return true;
         }

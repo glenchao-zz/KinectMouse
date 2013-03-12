@@ -24,19 +24,10 @@ namespace VirtualMouse
         User user = new User();
 
         /// <summary>
-        /// Variables that sets the area around the hand
-        /// </summary>
-        private int areaTop = -100;
-        private int areaBot = 100;
-        private int areaLeft = -100;
-        private int areaRight = 100;
-
-        /// <summary>
         /// Boolean variables to help make event handler more robust
         /// </summary>
         private bool b_InitializeEnvironment = false;
         private bool b_ColorPlaneDepthFrame = false;
-        private bool b_TrackFinger = false;
         private bool b_ActionSurfaceConfirmed = false;
 
         /// <summary>
@@ -65,16 +56,6 @@ namespace VirtualMouse
         /// </summary>
         private byte[] depthImageColor;
         private byte[] depthImageColor_debug;
-
-        /// <summary>
-        /// Bitmaps that will hold depth info for finger tracking
-        /// </summary>
-        private WriteableBitmap fingerBitmap;
-
-        /// <summary>
-        /// Byte array that actually stores the color to draw for finger tracking
-        /// </summary>
-        private byte[] fingerImageColor;
 
         /// <summary>
         /// Surface detection object that handles all the detection methods
@@ -143,7 +124,6 @@ namespace VirtualMouse
                 this.depthImageData = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
                 this.depthImageColor = new byte[this.sensor.DepthStream.FramePixelDataLength * sizeof(int)];
                 this.depthImageColor_debug = new byte[this.sensor.DepthStream.FramePixelDataLength * sizeof(int)];
-                this.fingerImageColor = new byte[this.sensor.DepthStream.FramePixelDataLength * sizeof(int)];
                 this.surfaceMatrix = new int[this.sensor.DepthStream.FramePixelDataLength * sizeof(int)];
 
                 // Initialize the bitmap we'll display on-screen 
@@ -159,17 +139,10 @@ namespace VirtualMouse
                                                        96.0,
                                                        PixelFormats.Bgr32,
                                                        null);
-                this.fingerBitmap = new WriteableBitmap(this.sensor.DepthStream.FrameWidth,
-                                                       this.sensor.DepthStream.FrameHeight,
-                                                       96.0,
-                                                       96.0,
-                                                       PixelFormats.Bgr32,
-                                                       null);
 
                 // Set the depth image we display to point to the bitmap where we'll put the image data
                 this.depthImage.Source = this.depthBitmap;
                 this.depthImage_debug.Source = this.depthBitmap_debug;
-                this.fingerImage.Source = this.fingerBitmap;
                 // Start the sensor
                 try
                 {
@@ -280,117 +253,6 @@ namespace VirtualMouse
         }
 
         /// <summary>
-        /// All frame ready to track fingers (Only identify the contour for now)
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-
-        private void TrackFingers(object sender, DepthImageFrameReadyEventArgs e)
-        {
-            if (!b_TrackFinger)
-            {
-                this.sensor.DepthFrameReady -= TrackFingers;
-                DebugMsg("Blocked TrackFingers");
-                return;
-            }
-
-            using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
-            {
-                if (depthFrame != null)
-                {
-                    // Copy the pixel data from the image to a temp array 
-                    depthFrame.CopyDepthImagePixelDataTo(this.depthImageData);
-
-                    // Clear color pixels
-                    for (int i = 0; i < this.fingerImageColor.Length; i++)
-                        fingerImageColor[i] = 0;
-
-                    // Get the binary array to indicate whether a pixel is part of the hand
-                    bool[] binaryArray = new bool[depthImageData.Length];
-                    for (int i = 0; i < this.depthImageData.Length; ++i)
-                    {
-                        // Get the depth for this pixel 
-                        short depth = depthImageData[i].Depth;
-
-                        if (this.actionArea.ValidIndeces[i] == 1)
-                        {
-                            double percentDiff = Math.Abs(2 * this.surfaceDetection.emptyFrame[i].Depth - depth + 0.0001) /
-                                                 (this.surfaceDetection.emptyFrame[i].Depth + 0.0001);
-
-                            if (percentDiff > 1.01) // sketchy numbers... need to tweek 
-                                // Is the hand
-                                binaryArray[i] = true;
-                            else
-                                // Not the hand
-                                binaryArray[i] = false;
-                        }
-                    }
-
-                    // Get the smallest rectangle that contains the actionArea
-                    Point topLeft = actionArea.cornerPoints[(int)ActionArea.corners.topLeft];
-                    Point topRight = actionArea.cornerPoints[(int)ActionArea.corners.topRight];
-                    Point botLeft = actionArea.cornerPoints[(int)ActionArea.corners.botLeft];
-                    Point botRight = actionArea.cornerPoints[(int)ActionArea.corners.botRight];
-                    double minX = Math.Min(topLeft.X, botLeft.X);
-                    double maxX = Math.Max(topRight.X, botRight.X);
-                    double minY = Math.Min(topLeft.Y, topRight.Y);
-                    double maxY = Math.Min(botLeft.Y, botRight.Y);
-
-                    fingerTracking.parseBinArray(binaryArray, minX, minY, maxX, maxY);
-
-                    // Highlight contour
-                    List<Point> contourPoints = fingerTracking.getContour();
-                    List<Point> fingers = fingerTracking.getFingers();
-                    Point palm = fingerTracking.getPalm();
-                    if (contourPoints.Count == 0 || fingers.Count == 0)
-                        return; 
-
-                    foreach (Point p in contourPoints)
-                    {
-                        int index = 4 * Helper.Point2Index(new Point(p.X, p.Y));
-                        this.fingerImageColor[index] = 255;
-                        this.fingerImageColor[index + 1] = 255;
-                        this.fingerImageColor[index + 2] = 255;
-                    }
-
-                    // Highlight fingers
-                    foreach (Point finger in fingers)
-                    {
-                        for (int i = -5; i < 5; i++)
-                        {
-                            for (int j = -5; j < 5; j++)
-                            {
-                                int index = 4 * Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
-                                this.fingerImageColor[index] = 255;
-                                this.fingerImageColor[index + 1] = 255;
-                                this.fingerImageColor[index + 2] = 255;
-                            }
-                        }
-                    }
-
-                    // Highlight palm
-                    for (int i = -5; i < 5; i++)
-                    {
-                        for (int j = -5; j < 5; j++)
-                        {
-                            int index = 4 * Helper.Point2Index(new Point(palm.X + i, palm.Y + j));
-                            this.fingerImageColor[index] = 0;
-                            this.fingerImageColor[index + 1] = 0;
-                            this.fingerImageColor[index + 2] = 255;
-                        }
-                    }
-
-                    // Write the pixel data into our bitmap
-                    this.fingerBitmap.WritePixels(
-                        new Int32Rect(0, 0, this.fingerBitmap.PixelWidth, this.fingerBitmap.PixelHeight),
-                        this.fingerImageColor,
-                        this.fingerBitmap.PixelWidth * sizeof(int),
-                        0);
-                }
-            }
-        }
-
-        /// <summary>
         /// Render the surface selected
         /// </summary>
         /// <param name="sender"></param>
@@ -417,12 +279,71 @@ namespace VirtualMouse
 
                     // Convert the depth to RGB 
                     int colorPixelIndex = 0;
-                    double distance;
 
                     foreach (int index in this.actionArea.ValidIndeces)
                     {
                         this.depthImageColor[index * 4] = 255;
                     }
+
+                    // Get the smallest rectangle that contains the actionArea
+                    Point topLeft = actionArea.cornerPoints[(int)ActionArea.corners.topLeft];
+                    Point topRight = actionArea.cornerPoints[(int)ActionArea.corners.topRight];
+                    Point botLeft = actionArea.cornerPoints[(int)ActionArea.corners.botLeft];
+                    Point botRight = actionArea.cornerPoints[(int)ActionArea.corners.botRight];
+                    double minX = Math.Min(topLeft.X, botLeft.X);
+                    double maxX = Math.Max(topRight.X, botRight.X);
+                    double minY = Math.Min(topLeft.Y, topRight.Y);
+                    double maxY = Math.Min(botLeft.Y, botRight.Y);
+
+                    // Get the binary array to indicate whether a pixel is part of the hand
+                    bool[] binaryArray = new bool[depthImageData.Length];
+                    //                    for (int i = (int) minX; i < (int) maxX; i++)
+                    //                    {
+                    //                        for (int j = (int) minY; j < (int) maxY; j++)
+                    //                        {
+                    //
+                    //                            // Get the depth for this pixel 
+                    //                            short depth = depthImageData[i].Depth;
+                    //
+                    //                            if (this.actionArea.ValidIndeces[i] == 1)
+                    //                            {
+                    //                                double percentDiff = Math.Abs(2 * this.surfaceDetection.emptyFrame[i].Depth - depth + 0.0001) /
+                    //                                                     (this.surfaceDetection.emptyFrame[i].Depth + 0.0001);
+                    //
+                    //                                if (percentDiff > 1.01) // sketchy numbers... need to tweek 
+                    //                                    // Is the hand
+                    //                                    binaryArray[i] = true;
+                    //                                else
+                    //                                    // Not the hand
+                    //                                    binaryArray[i] = false;
+                    //                            }
+                    //                        }
+                    //                    }
+                    for (int i = 0; i < this.depthImageData.Length; ++i)
+                    {
+                        // Get the depth for this pixel 
+                        short depth = depthImageData[i].Depth;
+
+                        if (this.actionArea.ValidIndeces[i] == 1)
+                        {
+                            double percentDiff = Math.Abs(2 * this.surfaceDetection.emptyFrame[i].Depth - depth + 0.0001) /
+                                                 (this.surfaceDetection.emptyFrame[i].Depth + 0.0001);
+
+                            if (percentDiff > 1.01) // sketchy numbers... need to tweek 
+                                // Is the hand
+                                binaryArray[i] = true;
+                            else
+                                // Not the hand
+                                binaryArray[i] = false;
+                        }
+                    }
+                    fingerTracking.parseBinArray(binaryArray, minX, minY, maxX, maxY);
+                    // Highlight contour
+                    List<Point> contourPoints = fingerTracking.getContour();
+                    List<Point> fingers = fingerTracking.getFingers();
+                    Point palm = fingerTracking.getPalm();
+
+
                     for (int i = 0; i < this.depthImageData.Length; ++i)
                     {
                         // Get the depth for this pixel 
@@ -433,32 +354,11 @@ namespace VirtualMouse
                         {
                             // Within the action area
                             Point pt = Helper.Index2Point(i);
-                            double percentDiff = Math.Abs(2 * this.surfaceDetection.emptyFrame[i].Depth - depth + 0.0001) / (this.surfaceDetection.emptyFrame[i].Depth + 0.0001);
-                            // Is the hand
-                            if (percentDiff > 1.01) // sketchy numbers... need to tweek 
-                            {
-                                if (this.surfaceDetection.surface.DistanceToPoint(pt.X, pt.Y, (double)depth) < 5)
-                                {
-                                    // If distance of pixel is close to the surface within the ActionArea
-                                    this.depthImageColor[colorPixelIndex++] = 0;
-                                    this.depthImageColor[colorPixelIndex++] = 0;
-                                    this.depthImageColor[colorPixelIndex++] = intensity; // Color Red
-                                }
-                                else
-                                {
-                                    // If distance of pixel is not close to the surface within the ActionArea
-                                    this.depthImageColor[colorPixelIndex++] = intensity; // Color blue
-                                    this.depthImageColor[colorPixelIndex++] = 0;
-                                    this.depthImageColor[colorPixelIndex++] = 0;
-                                }
-                            }
-                            else
-                            {
-                                // Is not the hand
-                                this.depthImageColor[colorPixelIndex++] = 0; 
-                                this.depthImageColor[colorPixelIndex++] = 0;
-                                this.depthImageColor[colorPixelIndex++] = 0;
-                            }
+
+                            // Is not the hand
+                            this.depthImageColor[colorPixelIndex++] = 0;
+                            this.depthImageColor[colorPixelIndex++] = 0;
+                            this.depthImageColor[colorPixelIndex++] = 0;
                         }
                         else
                         {
@@ -470,6 +370,44 @@ namespace VirtualMouse
                         // We're outputting BGR, the last byte in the 32 bits is unused so skip it 
                         // If we were outputting BGRA, we would write alpha here.
                         ++colorPixelIndex;
+                    }
+
+                    if (contourPoints.Count != 0 && fingers.Count != 0 && fingerTracking.hasPalm())
+                    {
+                        // Highlight contour
+                        foreach (Point p in contourPoints)
+                        {
+                            int index = 4 * Helper.Point2Index(new Point(p.X, p.Y));
+                            this.depthImageColor[index] = 255;
+                            this.depthImageColor[index + 1] = 255;
+                            this.depthImageColor[index + 2] = 255;
+                        }
+                        // Highlight fingers
+                        foreach (Point finger in fingers)
+                        {
+                            for (int i = -5; i < 5; i++)
+                            {
+                                for (int j = -5; j < 5; j++)
+                                {
+                                    int index = 4 * Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
+                                    this.depthImageColor[index] = 255;
+                                    this.depthImageColor[index + 1] = 255;
+                                    this.depthImageColor[index + 2] = 255;
+                                }
+                            }
+                        }
+
+                        // Highlight palm
+                        for (int i = -5; i < 5; i++)
+                        {
+                            for (int j = -5; j < 5; j++)
+                            {
+                                int index = 4 * Helper.Point2Index(new Point(palm.X + i, palm.Y + j));
+                                this.depthImageColor[index] = 0;
+                                this.depthImageColor[index + 1] = 0;
+                                this.depthImageColor[index + 2] = 255;
+                            }
+                        }
                     }
 
                     // Write the pixel data into our bitmap
@@ -575,31 +513,6 @@ namespace VirtualMouse
             catch (InvalidCastException ex)
             {
                 DebugMsg("Near field mode: " + ex.Message);
-            }
-        }
-
-        private void ModeButton_Click(object sender, RoutedEventArgs e)
-        {
-            bool surfaceMode = (string)this.modeButton.Content == "Surface Mode" ? true : false;
-
-            b_ColorPlaneDepthFrame = !surfaceMode;
-            b_TrackFinger = surfaceMode;
-
-            if (surfaceMode)
-            {
-                b_ColorPlaneDepthFrame = false;
-                this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
-                b_TrackFinger = true;
-                this.sensor.DepthFrameReady += TrackFingers;
-                this.modeButton.Content = "Finger Mode";
-            }
-            else
-            {
-                b_TrackFinger = false;
-                this.sensor.DepthFrameReady -= TrackFingers;
-                b_ColorPlaneDepthFrame = true;
-                this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
-                this.modeButton.Content = "Surface Mode";
             }
         }
 

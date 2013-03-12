@@ -33,20 +33,16 @@
                 <my:ActionArea x:Name="actionArea" Width="320" Height="240" Visibility="Collapsed"></my:ActionArea>
             </Canvas>
         </Grid>
-        <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform">
-            <Image x:Name="depthImage_indicator" Width="320" Height="240" />
-        </Viewbox>
-        <StackPanel Grid.Row="3" Grid.Column="0" Margin="10">
+        <StackPanel Grid.Row="2" Grid.Column="0" Margin="10">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Near Field Mode " />
                 <Button x:Name="nearFieldButton" Content="Turn Off" Click="NearFieldButton_Click" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="initEnvButton" Content="Initialize Environment" Click="InitializeEnvironmentButton_Click" />
-                <Button x:Name="modeButton" Content="Surface Mode" Click="ModeButton_Click"/>
             </StackPanel>
         </StackPanel>
-        <DockPanel x:Name="dockPanel" Grid.Row="3" Grid.Column="1" LastChildFill="True">
+        <DockPanel x:Name="dockPanel" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" LastChildFill="True">
             <ScrollViewer Height="{Binding ActualHeight, ElementName=dockPanel, Mode=OneWay}">
                 <TextBox x:Name="DebugBox" Text="Start Program..." Foreground="white" Background="Black" />
             </ScrollViewer>
