@@ -6,35 +6,40 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Canvas x:Name="actionCanvas" Background="Transparent"
-            MouseMove="ResizeArea"
-            MouseUp="DeselectEllipse"
-            MouseLeave="actionCanvas_MouseLeave">
-        <Polygon x:Name="area" Fill="Red" Points="{Binding cornerPoints}" Opacity="0.5"/>
+            MouseMove="actionCanvas_MouseMove"
+            MouseLeave="actionCanvas_MouseLeave"
+            MouseUp="DeselectShape">
+        <Polygon x:Name="area" Fill="Blue" 
+                 Points="{Binding cornerPoints}" 
+                 Opacity="0.5"
+                 MouseEnter="HighLightCorner"
+                 MouseLeave="UnHighLightCorner"
+                 MouseDown="SelectShape"/>
         <Ellipse x:Name="topLeft" Width="10" Height="10" Fill="Blue" 
                  MouseEnter="HighLightCorner" 
                  MouseLeave="UnHighLightCorner" 
-                 MouseDown="SelectEllipse"
+                 MouseDown="SelectShape"
                  Canvas.Left="0"
                  Canvas.Top="0">
         </Ellipse>
         <Ellipse x:Name="botLeft" Width="10" Height="10" Fill="Blue" 
                  MouseEnter="HighLightCorner" 
                  MouseLeave="UnHighLightCorner"
-                 MouseDown="SelectEllipse"
+                 MouseDown="SelectShape"
                  Canvas.Left="0"
                  Canvas.Top="50">
         </Ellipse>
         <Ellipse x:Name="botRight" Width="10" Height="10" Fill="Blue"
                  MouseEnter="HighLightCorner" 
                  MouseLeave="UnHighLightCorner"
-                 MouseDown="SelectEllipse"
+                 MouseDown="SelectShape"
                  Canvas.Left="50"
                  Canvas.Top="50">
         </Ellipse>
         <Ellipse x:Name="topRight" Width="10" Height="10" Fill="Blue" 
                  MouseEnter="HighLightCorner" 
                  MouseLeave="UnHighLightCorner"
-                 MouseDown="SelectEllipse"
+                 MouseDown="SelectShape"
                  Canvas.Left="50"
                  Canvas.Top="0">
         </Ellipse>
