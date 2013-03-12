@@ -145,14 +145,29 @@ namespace VirtualMouse
             pointArray[index] = new Point(mouse.X, mouse.Y);
             this.cornerPoints = new PointCollection(pointArray);
 
-            // Calculate border euqations
-            for (int i = 0; i < cornerPoints.Count; i++)
-            {
-                Point p1 = cornerPoints[i];
-                Point p2 = cornerPoints[(i + 1) % cornerPoints.Count];
-                borderEqs[i] = new lineEq(p1, p2);
-            }
+            GetBorderEquations();
+            GetValidIndices();
+        }
 
+        private void MovePolygon(object sender, MouseEventArgs e)
+        {
+            Point mouse = Mouse.GetPosition(this.actionCanvas);
+            Point[] pointArray = new Point[4];
+            this.cornerPoints.CopyTo(pointArray, 0);
+            for (int i = 0; i < pointArray.Length; i++)
+            {
+                pointArray[i].X = mouse.X - cornerDelta[i].X;
+                pointArray[i].Y = mouse.Y - cornerDelta[i].Y;
+                Canvas.SetLeft(this.actionCanvas.Children[i + 1], pointArray[i].X - ellipseWidth / 2);
+                Canvas.SetTop(this.actionCanvas.Children[i + 1], pointArray[i].Y - ellipseWidth / 2);
+            }
+            this.cornerPoints = new PointCollection(pointArray);
+            GetBorderEquations();
+            GetValidIndices();
+        }
+
+        private void GetValidIndices()
+        {
             // Calculate valid indices 
             for (int i = 0; i < maxLength; i++)
             {
@@ -169,19 +184,15 @@ namespace VirtualMouse
             }
         }
 
-        private void MovePolygon(object sender, MouseEventArgs e)
+        private void GetBorderEquations()
         {
-            Point mouse = Mouse.GetPosition(this.actionCanvas);
-            Point[] pointArray = new Point[4];
-            this.cornerPoints.CopyTo(pointArray, 0);
-            for (int i = 0; i < pointArray.Length; i++)
+            // Calculate border euqations
+            for (int i = 0; i < cornerPoints.Count; i++)
             {
-                pointArray[i].X = mouse.X - cornerDelta[i].X;
-                pointArray[i].Y = mouse.Y - cornerDelta[i].Y;
-                Canvas.SetLeft(this.actionCanvas.Children[i + 1], pointArray[i].X - ellipseWidth / 2);
-                Canvas.SetTop(this.actionCanvas.Children[i + 1], pointArray[i].Y - ellipseWidth / 2);
+                Point p1 = cornerPoints[i];
+                Point p2 = cornerPoints[(i + 1) % cornerPoints.Count];
+                borderEqs[i] = new lineEq(p1, p2);
             }
-            this.cornerPoints = new PointCollection(pointArray);
         }
 
         private void actionCanvas_MouseLeave(object sender, MouseEventArgs e)
