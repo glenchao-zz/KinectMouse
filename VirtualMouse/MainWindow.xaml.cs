@@ -114,7 +114,6 @@ namespace VirtualMouse
                 }
             }
 
-            this.actionArea.maxLength = 10000; //// ************************
             if (this.sensor != null)
             {
                 // Kinect settings
@@ -602,7 +601,7 @@ namespace VirtualMouse
         private void canvas_debug_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             Point point = Mouse.GetPosition(canvas_debug);
-            //DefineSurface(point);
+            DefineSurface(point);
         }
 
         private void DebugMsg(string msg)
