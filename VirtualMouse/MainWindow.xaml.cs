@@ -580,13 +580,17 @@ namespace VirtualMouse
 
             if (surfaceMode)
             {
+                b_ColorPlaneDepthFrame = false;
                 this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
+                b_TrackFinger = true;
                 this.sensor.DepthFrameReady += TrackFingers;
                 this.modeButton.Content = "Finger Mode";
             }
             else
             {
+                b_TrackFinger = false;
                 this.sensor.DepthFrameReady -= TrackFingers;
+                b_ColorPlaneDepthFrame = true;
                 this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
                 this.modeButton.Content = "Surface Mode";
             }

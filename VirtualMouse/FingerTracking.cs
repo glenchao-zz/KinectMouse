@@ -17,15 +17,15 @@ namespace VirtualMouse
         // Size of the jump after check a possible palm point
         private const int PalmJump = 30;
         // Size of the jump after check a possible fingertip
-        private const int FingerJump = 8;
+        private const int FingerJump = 25;
         // Size of the jump after find a valid fingertips (Percentage over the total)
-        private const double FingerJumpPerc = 0.10f;
+        private const double FingerJumpPerc = 0.15f;
 
         /*
          * K-curvature parameters
          */
         // Num of points away between three sample points
-        private const int K = 50;
+        private const int K = 30;
         // Angle formed by three sample points
         private const double Theta = 50 * (Math.PI / 180);
 
@@ -230,7 +230,7 @@ namespace VirtualMouse
 
                 angle = calculateAngle(p1 - p2, p3 - p2);
 
-                if (angle > 0 && angle < Theta)
+                if (angle > 0 && angle < Theta && contourPoints[i].Y > palm.Y)
                 {
                     // Skip if p2 is closer to the palm than p1 & p3
                     double dp2 = distanceEuclideanSquared(p2, palm);
@@ -239,10 +239,11 @@ namespace VirtualMouse
                         continue;
 
                     fingertips.Add(contourPoints[i]);
-                    i += (int)FingerJumpPerc * numPoints;
-                    step = FingerJump;
+                    i += (int)(FingerJumpPerc * numPoints);
+                    //step = FingerJump;
                 }
             }
+            Console.WriteLine("Number of fingres: " + fingertips.Count);
         }
 
         private bool isCircleInside(Point p, float r)
