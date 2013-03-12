@@ -30,21 +30,18 @@ namespace VirtualMouse
         // Angle formed by three sample points
         private const double Theta = 50 * (Math.PI / 180);
 
-
-
         private bool[,] handMatrix;
         private bool[,] contourMatrix;
 
-        private List<Point> contourPoints;
-        private List<Point> insidePoints;
+        private List<Point> contourPoints = new List<Point>();
+        private List<Point> insidePoints = new List<Point>();
         private bool b_Palm;
         private Point palm;
-        private List<Point> fingertips;
+        private List<Point> fingertips = new List<Point>();
 
         public bool isContour(int x, int y)
         {
             return contourMatrix[x, y];
-            //return newPoints.Contains(new Point(x, y));
         }
 
         public List<Point> getContour()
@@ -72,15 +69,20 @@ namespace VirtualMouse
             // Initialize local var
             handMatrix = new bool[Width, Height];
             contourMatrix = new bool[Width, Height];
-            contourPoints = new List<Point>();
-            insidePoints = new List<Point>();
-            fingertips = new List<Point>();
+            contourPoints.Clear();
+            insidePoints.Clear();
+            fingertips.Clear();
 
             // Conver binaryArray to a binary handMatrix
-            int k = 0;
-            for (int j = 0; j < Height; j++)
-                for (int i = 0; i < Width; i++)
-                    handMatrix[i, j] = binaryArray[k++];
+            int index;
+            for (int i = (int) minX*2; i < (int) maxX*2; i++)
+            {
+                for (int j = (int) minY*2; j < (int) maxY*2; j++)
+                {
+                    index = Helper.Point2Index(new Point(i, j));
+                    handMatrix[i, j] = binaryArray[index];
+                }
+            }
 
 
             // A point is a inside point if all its adjacent point is part of the hand, 
@@ -277,27 +279,27 @@ namespace VirtualMouse
             {
                 return false;
             }
-//            int xLeft = (int)(p.X - r / Math.Sqrt(2));
-//            int xRight = (int)(p.X + r / Math.Sqrt(2));
-//            int yDown = (int)(p.Y - r / Math.Sqrt(2));
-//            int yUp = (int)(p.Y + r / Math.Sqrt(2));
-//            if (xLeft < 0 || yDown < 0 || xRight >= Width || yUp >= Height) return false;
-//            if (!handMatrix[xLeft, yDown])
-//            {
-//                return false;
-//            }
-//            if (!handMatrix[xLeft, yUp])
-//            {
-//                return false;
-//            }
-//            if (!handMatrix[xRight, yDown])
-//            {
-//                return false;
-//            }
-//            if (!handMatrix[xRight, yUp])
-//            {
-//                return false;
-//            }
+            //            int xLeft = (int)(p.X - r / Math.Sqrt(2));
+            //            int xRight = (int)(p.X + r / Math.Sqrt(2));
+            //            int yDown = (int)(p.Y - r / Math.Sqrt(2));
+            //            int yUp = (int)(p.Y + r / Math.Sqrt(2));
+            //            if (xLeft < 0 || yDown < 0 || xRight >= Width || yUp >= Height) return false;
+            //            if (!handMatrix[xLeft, yDown])
+            //            {
+            //                return false;
+            //            }
+            //            if (!handMatrix[xLeft, yUp])
+            //            {
+            //                return false;
+            //            }
+            //            if (!handMatrix[xRight, yDown])
+            //            {
+            //                return false;
+            //            }
+            //            if (!handMatrix[xRight, yUp])
+            //            {
+            //                return false;
+            //            }
 
             return true;
         }
