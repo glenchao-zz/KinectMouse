@@ -15,9 +15,10 @@ namespace VirtualMouse
          * Jump parameters used in finding palm and finger (tweek if necessary)
          */
         // Size of the jump after check a possible palm point
-        private const int PalmJump = 30;
+        private const int PalmInsideJump = 5;
+        private const double PalmContourJumpPerc = 0.15f;
         // Size of the jump after check a possible fingertip
-        private const int FingerJump = 25;
+        //private const int FingerJump = 25;
         // Size of the jump after find a valid fingertips (Percentage over the total)
         private const double FingerJumpPerc = 0.15f;
 
@@ -187,23 +188,23 @@ namespace VirtualMouse
         // Find a largest circle in the hand area and label the center as palm
         private void findPalm()
         {
-            float min, max, distance;
-            max = float.MinValue;
+            float minDistToContour, largestRadius, distance;
+            largestRadius = float.MinValue;
 
-            for (int j = 0; j < insidePoints.Count; j += PalmJump)
+            for (int j = 0; j < insidePoints.Count; j += PalmInsideJump)
             {
-                min = float.MaxValue;
-                for (int k = 0; k < contourPoints.Count; k += PalmJump)
+                minDistToContour = float.MaxValue;
+                for (int k = 0; k < contourPoints.Count; k += (int)(PalmContourJumpPerc * contourPoints.Count))
                 {
                     distance = distanceEuclidean(insidePoints[j], contourPoints[k]);
+                    if (distance < 50) continue;
                     if (!isCircleInside(insidePoints[j], distance)) continue;
-                    if (distance < min) min = distance;
-                    if (min < max) break;
+                    if (distance < minDistToContour) minDistToContour = distance;
                 }
 
-                if (max < min && min != float.MaxValue)
+                if (largestRadius < minDistToContour && minDistToContour != float.MaxValue)
                 {
-                    max = min;
+                    largestRadius = minDistToContour;
                     palm = insidePoints[j];
                 }
             }
@@ -240,10 +241,8 @@ namespace VirtualMouse
 
                     fingertips.Add(contourPoints[i]);
                     i += (int)(FingerJumpPerc * numPoints);
-                    //step = FingerJump;
                 }
             }
-            Console.WriteLine("Number of fingres: " + fingertips.Count);
         }
 
         private bool isCircleInside(Point p, float r)
@@ -261,6 +260,27 @@ namespace VirtualMouse
                 return false;
             }
             if (p.Y + r >= Height || !handMatrix[(int)p.X, (int)(p.Y + r)])
+            {
+                return false;
+            }
+            int xLeft = (int) (p.X - r/Math.Sqrt(2));
+            int xRight = (int) (p.X + r/Math.Sqrt(2));
+            int yDown = (int) (p.Y - r/Math.Sqrt(2));
+            int yUp = (int) (p.Y + r/Math.Sqrt(2));
+            if (xLeft < 0 || yDown < 0 || xRight >= Width || yUp >= Height) return false;
+            if (!handMatrix[xLeft, yDown])
+            {
+                return false;
+            }
+            if (!handMatrix[xLeft, yUp])
+            {
+                return false;
+            }
+            if (!handMatrix[xRight, yDown])
+            {
+                return false;
+            }
+            if (!handMatrix[xRight, yUp])
             {
                 return false;
             }
