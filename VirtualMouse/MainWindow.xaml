@@ -30,7 +30,7 @@
                 <Image x:Name="depthImage_debug" Width="320" Height="240" />
             </Viewbox>
             <Canvas x:Name="canvas_debug" Width="320" Height="240" MouseDown="canvas_debug_MouseDown" Background="Transparent">
-                <my:ActionArea x:Name="actionArea" Width="320" Height="240"></my:ActionArea>
+                <my:ActionArea x:Name="actionArea" Width="320" Height="240" Visibility="Collapsed"></my:ActionArea>
             </Canvas>
         </Grid>
         <Viewbox Grid.Row="1" Grid.Column="1" Stretch="Uniform">

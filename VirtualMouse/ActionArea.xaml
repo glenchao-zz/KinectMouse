@@ -5,43 +5,50 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Canvas x:Name="actionCanvas" Background="Transparent"
-            MouseMove="actionCanvas_MouseMove"
-            MouseLeave="actionCanvas_MouseLeave"
-            MouseUp="DeselectShape">
-        <Polygon x:Name="area" Fill="Blue" 
-                 Points="{Binding cornerPoints}" 
-                 Opacity="0.5"
-                 MouseEnter="HighLightCorner"
-                 MouseLeave="UnHighLightCorner"
-                 MouseDown="SelectShape"/>
-        <Ellipse x:Name="topLeft" Width="10" Height="10" Fill="Blue" 
-                 MouseEnter="HighLightCorner" 
-                 MouseLeave="UnHighLightCorner" 
-                 MouseDown="SelectShape"
-                 Canvas.Left="0"
-                 Canvas.Top="0">
-        </Ellipse>
-        <Ellipse x:Name="botLeft" Width="10" Height="10" Fill="Blue" 
-                 MouseEnter="HighLightCorner" 
-                 MouseLeave="UnHighLightCorner"
-                 MouseDown="SelectShape"
-                 Canvas.Left="0"
-                 Canvas.Top="50">
-        </Ellipse>
-        <Ellipse x:Name="botRight" Width="10" Height="10" Fill="Blue"
-                 MouseEnter="HighLightCorner" 
-                 MouseLeave="UnHighLightCorner"
-                 MouseDown="SelectShape"
-                 Canvas.Left="50"
-                 Canvas.Top="50">
-        </Ellipse>
-        <Ellipse x:Name="topRight" Width="10" Height="10" Fill="Blue" 
-                 MouseEnter="HighLightCorner" 
-                 MouseLeave="UnHighLightCorner"
-                 MouseDown="SelectShape"
-                 Canvas.Left="50"
-                 Canvas.Top="0">
-        </Ellipse>
-    </Canvas>
+    <Grid Background="Transparent">
+        <Canvas x:Name="actionCanvas" Background="Transparent"
+                Grid.Row="0" Grid.Column="0"
+                MouseMove="actionCanvas_MouseMove"
+                MouseLeave="actionCanvas_MouseLeave"
+                MouseUp="DeselectShape">
+            <Button x:Name="ConfirmButton" Content="Confirm" 
+                Background="Blue" Foreground="White" 
+                Margin="240,10,10,260" Click="ConfirmButton_Click"
+                Grid.Row="0" Grid.Column="0"/>
+            <Polygon x:Name="area" Fill="Blue" 
+                     Points="{Binding cornerPoints}" 
+                     Opacity="0.5"
+                     MouseEnter="HighLightCorner"
+                     MouseLeave="UnHighLightCorner"
+                     MouseDown="SelectShape"/>
+            <Ellipse x:Name="topLeft" Width="10" Height="10" Fill="Blue" 
+                     MouseEnter="HighLightCorner" 
+                     MouseLeave="UnHighLightCorner" 
+                     MouseDown="SelectShape"
+                     Canvas.Left="0"
+                     Canvas.Top="0">
+            </Ellipse>
+            <Ellipse x:Name="botLeft" Width="10" Height="10" Fill="Blue" 
+                     MouseEnter="HighLightCorner" 
+                     MouseLeave="UnHighLightCorner"
+                     MouseDown="SelectShape"
+                     Canvas.Left="0"
+                     Canvas.Top="50">
+            </Ellipse>
+            <Ellipse x:Name="botRight" Width="10" Height="10" Fill="Blue"
+                     MouseEnter="HighLightCorner" 
+                     MouseLeave="UnHighLightCorner"
+                     MouseDown="SelectShape"
+                     Canvas.Left="50"
+                     Canvas.Top="50">
+            </Ellipse>
+            <Ellipse x:Name="topRight" Width="10" Height="10" Fill="Blue" 
+                     MouseEnter="HighLightCorner" 
+                     MouseLeave="UnHighLightCorner"
+                     MouseDown="SelectShape"
+                     Canvas.Left="50"
+                     Canvas.Top="0">
+            </Ellipse>
+        </Canvas>
+    </Grid>
 </UserControl>

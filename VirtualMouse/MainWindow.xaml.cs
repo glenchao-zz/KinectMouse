@@ -37,6 +37,7 @@ namespace VirtualMouse
         private bool b_InitializeEnvironment = false;
         private bool b_ColorPlaneDepthFrame = false;
         private bool b_TrackFinger = false;
+        private bool b_ActionSurfaceConfirmed = false;
 
         /// <summary>
         /// Width and Height of the output drawing
@@ -136,6 +137,7 @@ namespace VirtualMouse
 
                 // Set up ActionArea
                 this.actionArea.maxLength = this.sensor.DepthStream.FramePixelDataLength;
+                this.actionArea.ConfirmCallBack += actionArea_ConfirmCallBack;
 
                 // Allocate space to put the pixels we'll receive
                 this.depthImageData = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
@@ -338,6 +340,11 @@ namespace VirtualMouse
 
                     // Highlight contour
                     List<Point> contourPoints = fingerTracking.getContour();
+                    List<Point> fingers = fingerTracking.getFingers();
+                    Point palm = fingerTracking.getPalm();
+                    if (contourPoints.Count == 0 || fingers.Count == 0)
+                        return; 
+
                     foreach (Point p in contourPoints)
                     {
                         int index = 4 * Helper.Point2Index(new Point(p.X, p.Y));
@@ -347,7 +354,6 @@ namespace VirtualMouse
                     }
 
                     // Highlight fingers
-                    List<Point> fingers = fingerTracking.getFingers();
                     foreach (Point finger in fingers)
                     {
                         for (int i = -5; i < 5; i++)
@@ -363,7 +369,6 @@ namespace VirtualMouse
                     }
 
                     // Highlight palm
-                    Point palm = fingerTracking.getPalm();
                     for (int i = -5; i < 5; i++)
                     {
                         for (int j = -5; j < 5; j++)
@@ -424,7 +429,7 @@ namespace VirtualMouse
                         short depth = depthImageData[i].Depth;
                         byte intensity = (byte)(depth >= minDepth && depth <= maxDepth ? depth : 0);
 
-                        if (this.surfaceDetection.emptyFrame != null && this.actionArea.ValidIndeces[i] == 1)
+                        if (this.actionArea.ValidIndeces[i] == 1)
                         {
                             // Within the action area
                             Point pt = Helper.Index2Point(i);
@@ -540,6 +545,8 @@ namespace VirtualMouse
             if (this.sensor == null)
                 return;
 
+            this.actionArea.Visibility = System.Windows.Visibility.Visible;
+
             b_ColorPlaneDepthFrame = false;
             this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
             b_InitializeEnvironment = true;
@@ -596,10 +603,19 @@ namespace VirtualMouse
             }
         }
 
+        void actionArea_ConfirmCallBack()
+        {
+            b_ActionSurfaceConfirmed = true;
+        }
+
         private void canvas_debug_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            Point point = Mouse.GetPosition(canvas_debug);
-            DefineSurface(point);
+            if (b_ActionSurfaceConfirmed)
+            {
+                Point point = Mouse.GetPosition(canvas_debug);
+                DefineSurface(point);
+            }
+            b_ActionSurfaceConfirmed = false;
         }
 
         private void DebugMsg(string msg)

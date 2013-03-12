@@ -243,7 +243,6 @@ namespace VirtualMouse
                     //step = FingerJump;
                 }
             }
-            Console.WriteLine("Number of fingres: " + fingertips.Count);
         }
 
         private bool isCircleInside(Point p, float r)

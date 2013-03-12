@@ -23,10 +23,15 @@ namespace VirtualMouse
         // Call back on resize
         public delegate void ResizeEvent();
         public event ResizeEvent ResizeCallBack;
+        // Call back on confirm
+        public delegate void ConfirmEvent();
+        public event ConfirmEvent ConfirmCallBack;
 
         // General var
         private const int ellipseWidth = 10;
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private const int ellipseIndex = 2;
 
         private int _maxLength = 0;
         public int maxLength
@@ -141,7 +146,7 @@ namespace VirtualMouse
             Canvas.SetTop(selectedEllipse, mouse.Y - ellipseWidth / 2);
             Point[] pointArray = new Point[4];
             this.cornerPoints.CopyTo(pointArray, 0);
-            int index = actionCanvas.Children.IndexOf(selectedEllipse) - 1;
+            int index = actionCanvas.Children.IndexOf(selectedEllipse) - ellipseIndex;
             pointArray[index] = new Point(mouse.X, mouse.Y);
             this.cornerPoints = new PointCollection(pointArray);
 
@@ -158,8 +163,8 @@ namespace VirtualMouse
             {
                 pointArray[i].X = mouse.X - cornerDelta[i].X;
                 pointArray[i].Y = mouse.Y - cornerDelta[i].Y;
-                Canvas.SetLeft(this.actionCanvas.Children[i + 1], pointArray[i].X - ellipseWidth / 2);
-                Canvas.SetTop(this.actionCanvas.Children[i + 1], pointArray[i].Y - ellipseWidth / 2);
+                Canvas.SetLeft(this.actionCanvas.Children[i + ellipseIndex], pointArray[i].X - ellipseWidth / 2);
+                Canvas.SetTop(this.actionCanvas.Children[i + ellipseIndex], pointArray[i].Y - ellipseWidth / 2);
             }
             this.cornerPoints = new PointCollection(pointArray);
             GetBorderEquations();
@@ -219,6 +224,11 @@ namespace VirtualMouse
         private void DeselectShape(object sender, MouseButtonEventArgs e)
         {
             this.selectedShape = null;
+        }
+
+        private void ConfirmButton_Click(object sender, RoutedEventArgs e)
+        {
+            ConfirmCallBack();
         }
     }
 
