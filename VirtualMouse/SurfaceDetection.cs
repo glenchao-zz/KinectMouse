@@ -24,33 +24,38 @@ namespace VirtualMouse
         public Vector vectorB { get; set; }
         public Plane surface { get; set; }
         private int distance = 2;
+        private double elevationAngle;
 
-        public SurfaceDetection()
+        public SurfaceDetection(double angle)
         {
+            this.elevationAngle = angle;
         }
 
         public Plane getSurface()
         {
             int range = 4;
 
+            // Calculate origin 
             int index = Helper.Point2Index(definitionPoint);
             if (!emptyFrame[index].IsKnownDepth)
                 return null;
             short depth = emptyFrame[index].Depth;
             this.origin = new Vector(definitionPoint.X, definitionPoint.Y, (double)depth);
 
+            // Calculate sample point 1 (delta X)
             Point point1 = new Point(definitionPoint.X - distance, definitionPoint.Y);
             int index1 = Helper.Point2Index(point1);
-
             double depth1 = Helper.GetMostCommonDepthImagePixel(emptyFrame, index, range);
             this.sample1 = new Vector(point1.X, point1.Y, depth);
 
-            Point point2 = new Point(definitionPoint.X, definitionPoint.Y - distance);
+            // Calculate sample point 2 (delta Y)
+            double deltaY = (definitionPoint.Y - distance) * Math.Cos(this.elevationAngle);
+            Point point2 = new Point(definitionPoint.X, deltaY);
             int index2 = Helper.Point2Index(point2);
-            //double depth2 = Helper.GetMostCommonDepthImagePixel(emptyFrame, index2, range);
             double depth2 = emptyFrame[index2].Depth;
             this.sample2= new Vector(point2.X, point2.Y, depth2);
 
+            // Calculate vector A and B
             this.vectorA = this.sample1.Subtraction(this.origin);
             this.vectorB = this.sample2.Subtraction(this.origin);
 

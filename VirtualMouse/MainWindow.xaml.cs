@@ -60,7 +60,7 @@ namespace VirtualMouse
         /// <summary>
         /// Surface detection object that handles all the detection methods
         /// </summary>
-        private SurfaceDetection surfaceDetection = new SurfaceDetection();
+        private SurfaceDetection surfaceDetection;
 
         /// <summary>
         /// Finger tracking object
@@ -147,6 +147,9 @@ namespace VirtualMouse
                 try
                 {
                     this.sensor.Start();
+                    // Set up SurfaceDetection 
+                    this.surfaceDetection = new SurfaceDetection(this.sensor.ElevationAngle * Math.PI / 180);
+
                 }
                 catch (IOException ex)
                 {
