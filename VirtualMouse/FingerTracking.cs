@@ -232,14 +232,13 @@ namespace VirtualMouse
 
             int numPoints = contourPoints.Count;
             Point p1, p2, p3;
-            double angle;
-            int i, step = 1;
+            double angle, dp2;
 
             // Skip if not enough points in contour
             if (K > numPoints || !b_Palm) return;
 
             // Find the fingertips
-            for (i = 0; i < numPoints; i += step)
+            for (int i = 0; i < numPoints; i++)
             {
                 p1 = contourPoints[(i - K + numPoints) % numPoints];
                 p2 = contourPoints[i];
@@ -250,7 +249,7 @@ namespace VirtualMouse
                 if (angle > 0 && angle < Theta && contourPoints[i].Y > palm.Y)
                 {
                     // Skip if p2 is closer to the palm than p1 & p3
-                    double dp2 = distanceEuclideanSquared(p2, palm);
+                    dp2 = distanceEuclideanSquared(p2, palm);
                     if (dp2 < distanceEuclideanSquared(p1, palm) &&
                         dp2 < distanceEuclideanSquared(p3, palm))
                         continue;
@@ -279,28 +278,6 @@ namespace VirtualMouse
             {
                 return false;
             }
-            //            int xLeft = (int)(p.X - r / Math.Sqrt(2));
-            //            int xRight = (int)(p.X + r / Math.Sqrt(2));
-            //            int yDown = (int)(p.Y - r / Math.Sqrt(2));
-            //            int yUp = (int)(p.Y + r / Math.Sqrt(2));
-            //            if (xLeft < 0 || yDown < 0 || xRight >= Width || yUp >= Height) return false;
-            //            if (!handMatrix[xLeft, yDown])
-            //            {
-            //                return false;
-            //            }
-            //            if (!handMatrix[xLeft, yUp])
-            //            {
-            //                return false;
-            //            }
-            //            if (!handMatrix[xRight, yDown])
-            //            {
-            //                return false;
-            //            }
-            //            if (!handMatrix[xRight, yUp])
-            //            {
-            //                return false;
-            //            }
-
             return true;
         }
 

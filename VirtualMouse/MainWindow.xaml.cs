@@ -148,7 +148,7 @@ namespace VirtualMouse
                 {
                     this.sensor.Start();
                     // Set up SurfaceDetection 
-                    this.surfaceDetection = new SurfaceDetection(this.sensor.ElevationAngle * Math.PI / 180);
+                    this.surfaceDetection = new SurfaceDetection();
 
                 }
                 catch (IOException ex)
@@ -326,10 +326,10 @@ namespace VirtualMouse
                     Point topRight = actionArea.cornerPoints[(int)ActionArea.corners.topRight];
                     Point botLeft = actionArea.cornerPoints[(int)ActionArea.corners.botLeft];
                     Point botRight = actionArea.cornerPoints[(int)ActionArea.corners.botRight];
-                    double minX = Math.Min(topLeft.X, botLeft.X);
-                    double maxX = Math.Max(topRight.X, botRight.X);
-                    double minY = Math.Min(topLeft.Y, topRight.Y);
-                    double maxY = Math.Min(botLeft.Y, botRight.Y);
+                    double minX = Math.Max(0, Math.Min(topLeft.X, botLeft.X));
+                    double maxX = Math.Min((Width / 2 - 1), Math.Max(topRight.X, botRight.X));
+                    double minY = Math.Max(0, Math.Min(topLeft.Y, topRight.Y));
+                    double maxY = Math.Min((Height / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
                     fingerTracking.parseBinArray(binaryArray, minX, minY, maxX, maxY);
                     // Highlight contour
                     List<Point> contourPoints = fingerTracking.getContour();
@@ -358,7 +358,7 @@ namespace VirtualMouse
                                 for (int j = -5; j < 5; j++)
                                 {
                                     fingerIndex = 4 * Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
-                                    
+
                                     if (distance < 10)
                                     {
                                         this.depthImageColor[fingerIndex] = 0;
