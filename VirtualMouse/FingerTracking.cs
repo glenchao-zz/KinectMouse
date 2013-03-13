@@ -26,7 +26,7 @@ namespace VirtualMouse
         // Num of points away between three sample points
         private const int K = 30;
         // Angle formed by three sample points
-        private const double Theta = 50 * (Math.PI / 180);
+        private const double Theta = 40 * (Math.PI / 180);
 
         private bool[,] handMatrix;
         private bool[,] contourMatrix;

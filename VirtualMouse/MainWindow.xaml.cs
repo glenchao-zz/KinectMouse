@@ -298,7 +298,7 @@ namespace VirtualMouse
                             percentDiff = Math.Abs(2 * this.surfaceDetection.emptyFrame[i].Depth - depth + 0.0001) /
                                                      (this.surfaceDetection.emptyFrame[i].Depth + 0.0001);
 
-                            if (percentDiff > 1.01) // sketchy numbers... need to tweek 
+                            if (percentDiff > 1.008) // sketchy numbers... need to tweek 
                                 // Is the hand
                                 binaryArray[i] = true;
 
@@ -350,23 +350,31 @@ namespace VirtualMouse
                             fingerIndex = Helper.Point2Index(finger);
                             depth = depthImageData[fingerIndex].Depth;
                             distance = this.surfaceDetection.surface.DistanceToPoint(finger.X, finger.Y, (double)depth);
-                            for (int i = -5; i < 5; i++)
+                            int range = 3;
+                            if (distance < 16)
                             {
-                                for (int j = -5; j < 5; j++)
+                                
+                                for (int i = -range; i < range; i++)
                                 {
-                                    fingerIndex = 4 * Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
-
-                                    if (distance < 10)
+                                    for (int j = -range; j < range; j++)
                                     {
+                                        fingerIndex = 4 * Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
                                         this.depthImageColor[fingerIndex] = 0;
                                         this.depthImageColor[fingerIndex + 1] = 0;
                                         this.depthImageColor[fingerIndex + 2] = 255;
                                     }
-                                    else
+                                }
+                            }
+                            else
+                            {
+                                for (int i = -range; i < range; i++)
+                                {
+                                    for (int j = -range; j < range; j++)
                                     {
-                                        this.depthImageColor[fingerIndex] = 255;
+                                        fingerIndex = 4*Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
+                                        this.depthImageColor[fingerIndex] = 0;
                                         this.depthImageColor[fingerIndex + 1] = 255;
-                                        this.depthImageColor[fingerIndex + 2] = 255;
+                                        this.depthImageColor[fingerIndex + 2] = 0;
                                     }
                                 }
                             }
