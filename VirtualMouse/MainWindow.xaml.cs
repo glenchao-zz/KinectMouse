@@ -60,7 +60,7 @@ namespace VirtualMouse
         /// <summary>
         /// Surface detection object that handles all the detection methods
         /// </summary>
-        private SurfaceDetection surfaceDetection;
+        private SurfaceDetection surfaceDetection = new SurfaceDetection();
 
         /// <summary>
         /// Finger tracking object
@@ -147,9 +147,6 @@ namespace VirtualMouse
                 try
                 {
                     this.sensor.Start();
-                    // Set up SurfaceDetection 
-                    this.surfaceDetection = new SurfaceDetection();
-
                 }
                 catch (IOException ex)
                 {
@@ -327,15 +324,15 @@ namespace VirtualMouse
                     Point botLeft = actionArea.cornerPoints[(int)ActionArea.corners.botLeft];
                     Point botRight = actionArea.cornerPoints[(int)ActionArea.corners.botRight];
                     double minX = Math.Max(0, Math.Min(topLeft.X, botLeft.X));
-                    double maxX = Math.Min((Width / 2 - 1), Math.Max(topRight.X, botRight.X));
+                    double maxX = Math.Min((RenderWidth / 2 - 1), Math.Max(topRight.X, botRight.X));
                     double minY = Math.Max(0, Math.Min(topLeft.Y, topRight.Y));
-                    double maxY = Math.Min((Height / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
+                    double maxY = Math.Min((RenderHeight / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
                     fingerTracking.parseBinArray(binaryArray, minX, minY, maxX, maxY);
                     // Highlight contour
                     List<Point> contourPoints = fingerTracking.getContour();
                     List<Point> fingers = fingerTracking.getFingers();
                     Point palm = fingerTracking.getPalm();
-                    if (contourPoints.Count != 0 && fingers.Count != 0 && fingerTracking.hasPalm())
+                    if (fingerTracking.hasPalm())//contourPoints.Count != 0 && fingers.Count != 0 && fingerTracking.hasPalm())
                     {
                         // Highlight contour
                         foreach (Point p in contourPoints)
@@ -427,7 +424,13 @@ namespace VirtualMouse
             DebugMsg("X: " + point.X + " Y: " + point.Y);
 
             surfaceDetection.definitionPoint = point;
-            Plane surface = surfaceDetection.getSurface();
+
+            Point topRight = actionArea.cornerPoints[(int)ActionArea.corners.topRight];
+            Point botLeft = actionArea.cornerPoints[(int)ActionArea.corners.botLeft];
+            Point botRight = actionArea.cornerPoints[(int)ActionArea.corners.botRight];
+            double maxX = Math.Min((Width / 2 - 1), Math.Max(topRight.X, botRight.X));
+            double maxY = Math.Min((Height / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
+            Plane surface = surfaceDetection.getSurface((int)maxX, (int)maxY);
             if (surface == null)
             {
                 DebugMsg("Unknown depth. Please try another point");

@@ -16,9 +16,7 @@ namespace VirtualMouse
          */
         // Size of the jump after check a possible palm point
         private const int PalmInsideJump = 5;
-        private const double PalmContourJumpPerc = 0.075f;
-        // Size of the jump after check a possible fingertip
-        //private const int FingerJump = 25;
+        private const double PalmContourJumpPerc = 0.05f;
         // Size of the jump after find a valid fingertips (Percentage over the total)
         private const double FingerJumpPerc = 0.15f;
 
@@ -75,9 +73,9 @@ namespace VirtualMouse
 
             // Conver binaryArray to a binary handMatrix
             int index;
-            for (int i = (int) minX*2; i < (int) maxX*2; i++)
+            for (int i = (int)minX * 2; i < (int)maxX * 2; i++)
             {
-                for (int j = (int) minY*2; j < (int) maxY*2; j++)
+                for (int j = (int)minY * 2; j < (int)maxY * 2; j++)
                 {
                     index = Helper.Point2Index(new Point(i, j));
                     handMatrix[i, j] = binaryArray[index];
@@ -198,6 +196,7 @@ namespace VirtualMouse
         {
             b_Palm = false;
             float minDistToContour, largestRadius, distance;
+            int contourJump = (int)(PalmContourJumpPerc * contourPoints.Count);
             largestRadius = float.MinValue;
 
             bool validInside;
@@ -205,10 +204,10 @@ namespace VirtualMouse
             {
                 validInside = true;
                 minDistToContour = float.MaxValue;
-                for (int k = 0; k < contourPoints.Count; k += (int)(PalmContourJumpPerc * contourPoints.Count))
+                for (int k = 0; k < contourPoints.Count; k += contourJump)
                 {
                     distance = distanceEuclidean(insidePoints[j], contourPoints[k]);
-                    if (distance < 19)
+                    if (distance < 25)
                     {
                         validInside = false;
                         break;
@@ -235,7 +234,7 @@ namespace VirtualMouse
             double angle, dp2;
 
             // Skip if not enough points in contour
-            if (K > numPoints || !b_Palm) return;
+            if (K > numPoints)return;// || !b_Palm) return;
 
             // Find the fingertips
             for (int i = 0; i < numPoints; i++)

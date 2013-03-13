@@ -42,7 +42,8 @@ namespace VirtualMouse
             DepthImagePixel[] ret = new DepthImagePixel[length];
             for (int i = 0; i < length; i++)
             {
-                ret[i] = data[i + start];
+                if(data[i+start].IsKnownDepth)
+                    ret[i] = data[i + start];
             }
             var temp = ret.GroupBy(x => x.Depth).OrderByDescending(x => x.Count()).First().Key;
             return (double)temp;
