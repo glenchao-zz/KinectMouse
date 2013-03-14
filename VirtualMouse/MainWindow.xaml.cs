@@ -25,7 +25,8 @@ namespace VirtualMouse
         User user = new User();
 
         // finger stuff
-        System.Drawing.Point oldMousePos = new System.Drawing.Point();
+        System.Drawing.Point oldMousePos;
+        GestureController gestureController = new GestureController();
 
         /// <summary>
         /// Boolean variables to help make event handler more robust
@@ -120,6 +121,11 @@ namespace VirtualMouse
                 this.sensor.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
                 this.sensor.SkeletonStream.EnableTrackingInNearRange = true;
 
+                // Set up GestureController
+                this.gestureController.GestureReady += gestureController_GestureReady;
+                this.oldMousePos = System.Windows.Forms.Cursor.Position;
+                Console.WriteLine("Old Mouse: " + oldMousePos);
+
                 // Set up ActionArea
                 this.actionArea.maxLength = this.sensor.DepthStream.FramePixelDataLength;
                 this.actionArea.ConfirmCallBack += actionArea_ConfirmCallBack;
@@ -174,16 +180,17 @@ namespace VirtualMouse
                     b_InitializeEnvironment = true;
                     this.sensor.DepthFrameReady += InitializeEnvironment;
                 }
-                // NOTE: Comment this out when testing surface
-                // Add a event handler to perform finger tracking
-                //b_TrackFinger = true;
-                //this.sensor.AllFramesReady += TrackFingers;
             }
 
             if (this.sensor == null)
             {
                 DebugMsg("No Kinect ready. Please plug in a kinect");
             }
+        }
+
+        void gestureController_GestureReady(System.Drawing.Point pt)
+        {
+            System.Windows.Forms.Cursor.Position = pt;
         }
 
         /// <summary>
@@ -368,18 +375,11 @@ namespace VirtualMouse
 
                                 if (fingers.Count == 1)
                                 {
-                                    System.Drawing.Point newMousePos = System.Windows.Forms.Cursor.Position;
-                                    int posX = (int)((finger.X - minX * 2) * xMultiplier * 1.5);
-                                    int posY = (int)((maxY * 2 - finger.Y) * yMultiplier * 1.5);
 
-                                    double xDiff = oldMousePos.X - posX;
-                                    double yDiff = oldMousePos.Y - posY;
-                                    double delta = Math.Sqrt(xDiff * xDiff + yDiff * yDiff);
-                                    if (delta > 35)
-                                    {
-                                        System.Windows.Forms.Cursor.Position = new System.Drawing.Point(posX, posY);
-                                        oldMousePos = new System.Drawing.Point(posX, posY);
-                                    }
+                                    int posX = (int)((finger.X - minX * 2) * xMultiplier * 1.1);
+                                    int posY = (int)((maxY * 2 - finger.Y) * yMultiplier * 1.1);
+
+                                    gestureController.Add2Buffer(new System.Drawing.Point(posX, posY));
                                 }
                             }
                             else
@@ -388,6 +388,9 @@ namespace VirtualMouse
                                 fingerColors[0] = 0;
                                 fingerColors[1] = 255;
                                 fingerColors[2] = 0;
+
+                                gestureController.MouseDownPos = System.Windows.Forms.Cursor.Position;
+                                gestureController.ResetBuffer();
                             }
                             for (int i = -coloringRange; i < coloringRange; i++)
                             {
@@ -422,19 +425,6 @@ namespace VirtualMouse
                         0);
                 }
             }
-        }
-
-        /// <summary>
-        /// Maps a SkeletonPoint to lie within our render space and converts to Point
-        /// </summary>
-        /// <param name="skeletonPoint">Point to map</param>
-        /// <returns>Mapped point</returns>
-        private Point SkeletonPointToScreen(SkeletonPoint skeletonPoint)
-        {
-            DepthImagePoint depthPoint = this.sensor.CoordinateMapper.MapSkeletonPointToDepthPoint(skeletonPoint,
-                                                                                                   DepthImageFormat
-                                                                                                       .Resolution640x480Fps30);
-            return new Point(depthPoint.X, depthPoint.Y);
         }
 
         private void DefineSurface(Point point)
@@ -537,6 +527,7 @@ namespace VirtualMouse
             {
                 Point point = Mouse.GetPosition(canvas_debug);
                 DefineSurface(point);
+                this.actionArea.Visibility = System.Windows.Visibility.Collapsed;
             }
             b_ActionSurfaceConfirmed = false;
         }

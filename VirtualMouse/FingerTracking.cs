@@ -18,7 +18,7 @@ namespace VirtualMouse
         private const int PalmInsideJump = 5;
         private const double PalmContourJumpPerc = 0.05f;
         // Size of the jump after find a valid fingertips (Percentage over the total)
-        private const double FingerJumpPerc = 0.15f;
+        private const double FingerJumpPerc = 0.10f;
 
         /*
          * K-curvature parameters
