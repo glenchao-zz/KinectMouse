@@ -26,6 +26,7 @@ namespace VirtualMouse
 
         // finger stuff
         System.Drawing.Point oldMousePos = new System.Drawing.Point();
+        GestureController gestureController = new GestureController();
 
         /// <summary>
         /// Boolean variables to help make event handler more robust
@@ -120,6 +121,9 @@ namespace VirtualMouse
                 this.sensor.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
                 this.sensor.SkeletonStream.EnableTrackingInNearRange = true;
 
+                // Set up GestureController
+                this.gestureController.GestureReady += gestureController_GestureReady;
+
                 // Set up ActionArea
                 this.actionArea.maxLength = this.sensor.DepthStream.FramePixelDataLength;
                 this.actionArea.ConfirmCallBack += actionArea_ConfirmCallBack;
@@ -184,6 +188,11 @@ namespace VirtualMouse
             {
                 DebugMsg("No Kinect ready. Please plug in a kinect");
             }
+        }
+
+        void gestureController_GestureReady(System.Drawing.Point pt)
+        {
+            System.Windows.Forms.Cursor.Position = pt;
         }
 
         /// <summary>
@@ -367,18 +376,11 @@ namespace VirtualMouse
 
                                 if (fingers.Count == 1)
                                 {
-                                    System.Drawing.Point newMousePos = System.Windows.Forms.Cursor.Position;
-                                    int posX = (int)((finger.X - minX * 2) * xMultiplier * 1.5);
-                                    int posY = (int)((maxY * 2 - finger.Y) * yMultiplier * 1.5);
+                                    //System.Drawing.Point newMousePos = System.Windows.Forms.Cursor.Position;
+                                    int posX = (int)((finger.X - minX * 2) * xMultiplier/2);
+                                    int posY = (int)((maxY * 2 - finger.Y) * yMultiplier/2);
 
-                                    double xDiff = oldMousePos.X - posX;
-                                    double yDiff = oldMousePos.Y - posY;
-                                    double delta = Math.Sqrt(xDiff * xDiff + yDiff * yDiff);
-                                    if (delta > 35)
-                                    {
-                                        System.Windows.Forms.Cursor.Position = new System.Drawing.Point(posX, posY);
-                                        oldMousePos = new System.Drawing.Point(posX, posY);
-                                    }
+                                    gestureController.AddFrame(new System.Drawing.Point(posX, posY));
                                 }
                             }
                             else
