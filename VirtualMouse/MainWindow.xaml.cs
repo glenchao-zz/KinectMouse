@@ -25,7 +25,7 @@ namespace VirtualMouse
         User user = new User();
 
         // finger stuff
-        System.Drawing.Point oldMousePos = new System.Drawing.Point();
+        System.Drawing.Point oldMousePos;
         GestureController gestureController = new GestureController();
 
         /// <summary>
@@ -123,6 +123,8 @@ namespace VirtualMouse
 
                 // Set up GestureController
                 this.gestureController.GestureReady += gestureController_GestureReady;
+                this.oldMousePos = System.Windows.Forms.Cursor.Position;
+                Console.WriteLine("Old Mouse: " + oldMousePos);
 
                 // Set up ActionArea
                 this.actionArea.maxLength = this.sensor.DepthStream.FramePixelDataLength;
@@ -178,10 +180,6 @@ namespace VirtualMouse
                     b_InitializeEnvironment = true;
                     this.sensor.DepthFrameReady += InitializeEnvironment;
                 }
-                // NOTE: Comment this out when testing surface
-                // Add a event handler to perform finger tracking
-                //b_TrackFinger = true;
-                //this.sensor.AllFramesReady += TrackFingers;
             }
 
             if (this.sensor == null)
@@ -376,11 +374,11 @@ namespace VirtualMouse
 
                                 if (fingers.Count == 1)
                                 {
-                                    //System.Drawing.Point newMousePos = System.Windows.Forms.Cursor.Position;
-                                    int posX = (int)((finger.X - minX * 2) * xMultiplier/2);
-                                    int posY = (int)((maxY * 2 - finger.Y) * yMultiplier/2);
 
-                                    gestureController.AddFrame(new System.Drawing.Point(posX, posY));
+                                    int posX = (int)((finger.X - minX * 2) * xMultiplier * 1.1);
+                                    int posY = (int)((maxY * 2 - finger.Y) * yMultiplier * 1.1);
+
+                                    gestureController.Add2Buffer(new System.Drawing.Point(posX, posY));
                                 }
                             }
                             else
@@ -389,6 +387,9 @@ namespace VirtualMouse
                                 fingerColors[0] = 0;
                                 fingerColors[1] = 255;
                                 fingerColors[2] = 0;
+
+                                gestureController.MouseDownPos = System.Windows.Forms.Cursor.Position;
+                                gestureController.ResetBuffer();
                             }
                             for (int i = -coloringRange; i < coloringRange; i++)
                             {

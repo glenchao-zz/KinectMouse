@@ -13,15 +13,15 @@ namespace VirtualMouse
         public event GestureEvent GestureReady;
 
         private Queue<Point> Buffer;
-
-
+        public Point FingerDownPos;
+        public Point MouseDownPos;
 
         public GestureController()
         {
             Buffer = new Queue<Point>(10);
         }
 
-        public void AddFrame(Point pt)
+        public void Add2Buffer(Point pt)
         {
             // If buffer is full
             if (this.Buffer.Count == 10)
@@ -29,11 +29,20 @@ namespace VirtualMouse
                 // pop
                 this.Buffer.Dequeue();
             }
+            if (this.Buffer.Count == 0)
+            {
+                FingerDownPos = pt;
+            }
             this.Buffer.Enqueue(pt);
-            Point ret = new Point();
-            ret.X = (int)this.Buffer.Average(k => k.X);
-            ret.Y = (int)this.Buffer.Average(k => k.Y);
-            GestureReady(ret);
+            Point pos = new Point();
+            pos.X = (int)(this.MouseDownPos.X + this.Buffer.Average(k => k.X) - FingerDownPos.X);
+            pos.Y = (int)(this.MouseDownPos.Y + this.Buffer.Average(k => k.Y) - FingerDownPos.Y);
+            GestureReady(pos);
+        }
+
+        public void ResetBuffer()
+        {
+            this.Buffer.Clear();
         }
 
 
