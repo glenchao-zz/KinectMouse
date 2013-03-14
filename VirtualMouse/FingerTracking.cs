@@ -183,7 +183,7 @@ namespace VirtualMouse
             b_Palm = false;
             float minDistToContour, largestRadius, distance;
             int contourJump = (int)(PalmContourJumpPerc * trackedHand.numContourPoints()) + 1;
-            Point possiblePalm = new Point();
+            List<Point> possiblePalm = new List<Point>();
             largestRadius = float.MinValue;
 
             bool validInside;
@@ -206,11 +206,14 @@ namespace VirtualMouse
                 if (validInside && largestRadius < minDistToContour && minDistToContour != float.MaxValue)
                 {
                     largestRadius = minDistToContour;
-                    possiblePalm = trackedHand.getInsidePoint(j);
+                    possiblePalm.Add(trackedHand.getInsidePoint(j));
                     b_Palm = true;
                 }
             }
-            trackedHand.setPalm(possiblePalm);
+            if (possiblePalm.Count > 0)
+                trackedHand.setPalm(new Point(possiblePalm.Average(k => k.X), possiblePalm.Average(k => k.Y)));
+            else
+                trackedHand.setPalm(new Point());
         }
 
         private void findFingers()
