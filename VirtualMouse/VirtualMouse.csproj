@@ -60,6 +60,7 @@
       <DependentUpon>ActionArea.xaml</DependentUpon>
     </Compile>
     <Compile Include="Gesture.cs" />
+    <Compile Include="Hand.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SurfaceDetection.cs" />

@@ -333,9 +333,10 @@ namespace VirtualMouse
                     double maxY = Math.Min((RenderHeight / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
                     fingerTracking.parseBinArray(binaryArray, minX, minY, maxX, maxY);
                     // Highlight contour
-                    List<Point> contourPoints = fingerTracking.getContour();
-                    List<Point> fingers = fingerTracking.getFingers();
-                    Point palm = fingerTracking.getPalm();
+                    Hand hand = fingerTracking.getHand();
+                    List<Point> contourPoints = hand.getContour();
+                    List<Point> fingers = hand.getFingers();
+                    Point palm = hand.getPalm();
                     if (fingerTracking.hasPalm())//contourPoints.Count != 0 && fingers.Count != 0 && fingerTracking.hasPalm())
                     {
                         // Highlight contour

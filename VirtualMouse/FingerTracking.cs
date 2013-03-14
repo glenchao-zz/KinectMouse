@@ -31,30 +31,18 @@ namespace VirtualMouse
         private bool[,] handMatrix;
         private bool[,] contourMatrix;
 
-        private List<Point> contourPoints = new List<Point>();
-        private List<Point> insidePoints = new List<Point>();
+        private Hand trackedHand = new Hand();
+
         private bool b_Palm;
-        private Point palm;
-        private List<Point> fingertips = new List<Point>();
 
         public bool isContour(int x, int y)
         {
             return contourMatrix[x, y];
         }
 
-        public List<Point> getContour()
+        public Hand getHand()
         {
-            return contourPoints;
-        }
-
-        public List<Point> getFingers()
-        {
-            return fingertips;
-        }
-
-        public Point getPalm()
-        {
-            return palm;
+            return trackedHand;
         }
 
         public bool hasPalm()
@@ -67,9 +55,7 @@ namespace VirtualMouse
             // Initialize local var
             handMatrix = new bool[Width, Height];
             contourMatrix = new bool[Width, Height];
-            contourPoints.Clear();
-            insidePoints.Clear();
-            fingertips.Clear();
+            trackedHand.reset();
 
             // Conver binaryArray to a binary handMatrix
             int index;
@@ -126,7 +112,7 @@ namespace VirtualMouse
                         else
                         {
                             // Is inside
-                            insidePoints.Add(new Point(i, j));
+                            trackedHand.addInsidePoints(i, j);
                         }
 
                     }
@@ -134,16 +120,16 @@ namespace VirtualMouse
             }
 
             // Get a sorted list of contour points
-            int maxPoints = 0;
+            List<Point> maxFrontier = new List<Point>();
             while (potentialPoints.Count > 0)
             {
                 List<Point> frontier = calculateFrontier(ref potentialPoints);
-                if (frontier.Count > maxPoints)
+                if (frontier.Count > maxFrontier.Count)
                 {
-                    maxPoints = frontier.Count;
-                    contourPoints = frontier;
+                    maxFrontier = frontier;
                 }
             }
+            trackedHand.setContourPoints(maxFrontier);
 
             // Find palm and fingers
             findPalm();
@@ -196,64 +182,65 @@ namespace VirtualMouse
         {
             b_Palm = false;
             float minDistToContour, largestRadius, distance;
-            int contourJump = (int)(PalmContourJumpPerc * contourPoints.Count);
+            int contourJump = (int)(PalmContourJumpPerc * trackedHand.numContourPoints()) + 1;
+            Point possiblePalm = new Point();
             largestRadius = float.MinValue;
 
             bool validInside;
-            for (int j = 0; j < insidePoints.Count; j += PalmInsideJump)
+            for (int j = 0; j < trackedHand.numInsidePoints(); j += PalmInsideJump)
             {
                 validInside = true;
                 minDistToContour = float.MaxValue;
-                for (int k = 0; k < contourPoints.Count; k += contourJump)
+                for (int k = 0; k < trackedHand.numContourPoints(); k += contourJump)
                 {
-                    distance = distanceEuclidean(insidePoints[j], contourPoints[k]);
+                    distance = distanceEuclidean(trackedHand.getInsidePoint(j), trackedHand.getContourPoint(k));
                     if (distance < 25)
                     {
                         validInside = false;
                         break;
                     }
-                    if (!isCircleInside(insidePoints[j], distance)) continue;
+                    if (!isCircleInside(trackedHand.getInsidePoint(j), distance)) continue;
                     if (distance < minDistToContour) minDistToContour = distance;
                 }
 
                 if (validInside && largestRadius < minDistToContour && minDistToContour != float.MaxValue)
                 {
                     largestRadius = minDistToContour;
-                    palm = insidePoints[j];
+                    possiblePalm = trackedHand.getInsidePoint(j);
                     b_Palm = true;
                 }
             }
+            trackedHand.setPalm(possiblePalm);
         }
 
         private void findFingers()
         {
-            fingertips = new List<Point>();
-
-            int numPoints = contourPoints.Count;
-            Point p1, p2, p3;
+            int numPoints = trackedHand.numContourPoints();
+            Point p1, p2, p3, palm;
             double angle, dp2;
 
             // Skip if not enough points in contour
-            if (K > numPoints)return;// || !b_Palm) return;
+            if (K > numPoints) return;// || !b_Palm) return;
 
             // Find the fingertips
             for (int i = 0; i < numPoints; i++)
             {
-                p1 = contourPoints[(i - K + numPoints) % numPoints];
-                p2 = contourPoints[i];
-                p3 = contourPoints[(i + K) % numPoints];
+                p1 = trackedHand.getContourPoint((i - K + numPoints) % numPoints);
+                p2 = trackedHand.getContourPoint(i);
+                p3 = trackedHand.getContourPoint((i + K) % numPoints);
 
                 angle = calculateAngle(p1 - p2, p3 - p2);
 
-                if (angle > 0 && angle < Theta && contourPoints[i].Y > palm.Y)
+                if (angle > 0 && angle < Theta && p2.Y > trackedHand.getPalm().Y)
                 {
                     // Skip if p2 is closer to the palm than p1 & p3
-                    dp2 = distanceEuclideanSquared(p2, palm);
+                    dp2 = distanceEuclideanSquared(p2, trackedHand.getPalm());
+                    palm = trackedHand.getPalm();
                     if (dp2 < distanceEuclideanSquared(p1, palm) &&
                         dp2 < distanceEuclideanSquared(p3, palm))
                         continue;
 
-                    fingertips.Add(contourPoints[i]);
+                    trackedHand.addFinger(p2);
                     i += (int)(FingerJumpPerc * numPoints);
                 }
             }
