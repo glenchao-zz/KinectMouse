@@ -314,7 +314,7 @@ namespace VirtualMouse
                                 binaryArray[i] = true;
 
                             this.depthImageColor[colorPixelIndex++] = 0;
-                            this.depthImageColor[colorPixelIndex++] = 0;
+                            this.depthImageColor[colorPixelIndex++] = 100;
                             this.depthImageColor[colorPixelIndex++] = 0;
                         }
                         else
@@ -341,9 +341,9 @@ namespace VirtualMouse
                     fingerTracking.parseBinArray(binaryArray, minX, minY, maxX, maxY);
                     // Highlight contour
                     Hand hand = fingerTracking.getHand();
-                    List<Point> contourPoints = hand.getContour();
-                    List<Point> fingers = hand.getFingers();
-                    Point palm = hand.getPalm();
+                    List<Point> contourPoints = hand.contourPoints;
+                    List<Point> fingers = hand.fingertips;
+                    Point palm = hand.palm;
                     if (fingerTracking.hasPalm())//contourPoints.Count != 0 && fingers.Count != 0 && fingerTracking.hasPalm())
                     {
                         // Highlight contour

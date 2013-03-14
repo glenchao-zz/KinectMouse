@@ -112,7 +112,7 @@ namespace VirtualMouse
                         else
                         {
                             // Is inside
-                            trackedHand.addInsidePoints(i, j);
+                            trackedHand.insidePoints.Add(new Point(i, j));
                         }
 
                     }
@@ -129,7 +129,7 @@ namespace VirtualMouse
                     maxFrontier = frontier;
                 }
             }
-            trackedHand.setContourPoints(maxFrontier);
+            trackedHand.contourPoints = maxFrontier;
 
             // Find palm and fingers
             findPalm();
@@ -182,43 +182,43 @@ namespace VirtualMouse
         {
             b_Palm = false;
             float minDistToContour, largestRadius, distance;
-            int contourJump = (int)(PalmContourJumpPerc * trackedHand.numContourPoints()) + 1;
+            int contourJump = (int)(PalmContourJumpPerc * trackedHand.contourPoints.Count) + 1;
             List<Point> possiblePalm = new List<Point>();
             largestRadius = float.MinValue;
 
             bool validInside;
-            for (int j = 0; j < trackedHand.numInsidePoints(); j += PalmInsideJump)
+            for (int j = 0; j < trackedHand.insidePoints.Count; j += PalmInsideJump)
             {
                 validInside = true;
                 minDistToContour = float.MaxValue;
-                for (int k = 0; k < trackedHand.numContourPoints(); k += contourJump)
+                for (int k = 0; k < trackedHand.contourPoints.Count; k += contourJump)
                 {
-                    distance = distanceEuclidean(trackedHand.getInsidePoint(j), trackedHand.getContourPoint(k));
+                    distance = distanceEuclidean(trackedHand.insidePoints[j], trackedHand.contourPoints[k]);
                     if (distance < 25)
                     {
                         validInside = false;
                         break;
                     }
-                    if (!isCircleInside(trackedHand.getInsidePoint(j), distance)) continue;
+                    if (!isCircleInside(trackedHand.insidePoints[j], distance)) continue;
                     if (distance < minDistToContour) minDistToContour = distance;
                 }
 
                 if (validInside && largestRadius < minDistToContour && minDistToContour != float.MaxValue)
                 {
                     largestRadius = minDistToContour;
-                    possiblePalm.Add(trackedHand.getInsidePoint(j));
+                    possiblePalm.Add(trackedHand.insidePoints[j]);
                     b_Palm = true;
                 }
             }
             if (possiblePalm.Count > 0)
-                trackedHand.setPalm(new Point(possiblePalm.Average(k => k.X), possiblePalm.Average(k => k.Y)));
+                trackedHand.palm = new Point(possiblePalm.Average(k => k.X), possiblePalm.Average(k => k.Y));
             else
-                trackedHand.setPalm(new Point());
+                trackedHand.palm = new Point();
         }
 
         private void findFingers()
         {
-            int numPoints = trackedHand.numContourPoints();
+            int numPoints = trackedHand.contourPoints.Count;
             Point p1, p2, p3, palm;
             double angle, dp2;
 
@@ -226,24 +226,24 @@ namespace VirtualMouse
             if (K > numPoints) return;// || !b_Palm) return;
 
             // Find the fingertips
-            for (int i = 0; i < numPoints; i++)
+            for (int i = K; i < numPoints - K; i++)
             {
-                p1 = trackedHand.getContourPoint((i - K + numPoints) % numPoints);
-                p2 = trackedHand.getContourPoint(i);
-                p3 = trackedHand.getContourPoint((i + K) % numPoints);
+                p1 = trackedHand.contourPoints[i - K];
+                p2 = trackedHand.contourPoints[i];
+                p3 = trackedHand.contourPoints[i + K];
 
                 angle = calculateAngle(p1 - p2, p3 - p2);
 
-                if (angle > 0 && angle < Theta && p2.Y > trackedHand.getPalm().Y)
+                if (angle > 0 && angle < Theta && p2.Y > trackedHand.palm.Y)
                 {
                     // Skip if p2 is closer to the palm than p1 & p3
-                    dp2 = distanceEuclideanSquared(p2, trackedHand.getPalm());
-                    palm = trackedHand.getPalm();
+                    dp2 = distanceEuclideanSquared(p2, trackedHand.palm);
+                    palm = trackedHand.palm;
                     if (dp2 < distanceEuclideanSquared(p1, palm) &&
                         dp2 < distanceEuclideanSquared(p3, palm))
                         continue;
 
-                    trackedHand.addFinger(p2);
+                    trackedHand.fingertips.Add(p2);
                     i += (int)(FingerJumpPerc * numPoints);
                 }
             }
@@ -272,12 +272,16 @@ namespace VirtualMouse
 
         private float distanceEuclidean(Point p1, Point p2)
         {
-            return (float)Math.Sqrt((p1.X - p2.X) * (p1.X - p2.X) + (p1.Y - p2.Y) * (p1.Y - p2.Y));
+            float x = (float)(p1.X - p2.X);
+            float y = (float)(p1.Y - p2.Y);
+            return (float)Math.Sqrt(x * x + y * y);
         }
 
-        private float distanceEuclideanSquared(Point p1, Point p2)
+        private int distanceEuclideanSquared(Point p1, Point p2)
         {
-            return (float)((p1.X - p2.X) * (p1.X - p2.X) + (p1.Y - p2.Y) * (p1.Y - p2.Y));
+            int x = (int)(p1.X - p2.X);
+            int y = (int)(p1.Y - p2.Y);
+            return (x * x + y * y);
         }
 
         private double calculateAngle(System.Windows.Vector r1, System.Windows.Vector r2)
