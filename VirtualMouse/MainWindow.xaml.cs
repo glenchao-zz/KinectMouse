@@ -425,19 +425,6 @@ namespace VirtualMouse
             }
         }
 
-        /// <summary>
-        /// Maps a SkeletonPoint to lie within our render space and converts to Point
-        /// </summary>
-        /// <param name="skeletonPoint">Point to map</param>
-        /// <returns>Mapped point</returns>
-        private Point SkeletonPointToScreen(SkeletonPoint skeletonPoint)
-        {
-            DepthImagePoint depthPoint = this.sensor.CoordinateMapper.MapSkeletonPointToDepthPoint(skeletonPoint,
-                                                                                                   DepthImageFormat
-                                                                                                       .Resolution640x480Fps30);
-            return new Point(depthPoint.X, depthPoint.Y);
-        }
-
         private void DefineSurface(Point point)
         {
             if (this.surfaceDetection.emptyFrame == null || this.actionArea.ValidIndeces == null)
@@ -538,6 +525,7 @@ namespace VirtualMouse
             {
                 Point point = Mouse.GetPosition(canvas_debug);
                 DefineSurface(point);
+                this.actionArea.Visibility = System.Windows.Visibility.Collapsed;
             }
             b_ActionSurfaceConfirmed = false;
         }

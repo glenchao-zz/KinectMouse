@@ -18,7 +18,7 @@ namespace VirtualMouse
         private const int PalmInsideJump = 5;
         private const double PalmContourJumpPerc = 0.05f;
         // Size of the jump after find a valid fingertips (Percentage over the total)
-        private const double FingerJumpPerc = 0.15f;
+        private const double FingerJumpPerc = 0.10f;
 
         /*
          * K-curvature parameters
@@ -196,7 +196,7 @@ namespace VirtualMouse
         {
             b_Palm = false;
             float minDistToContour, largestRadius, distance;
-            int contourJump = (int)(PalmContourJumpPerc * contourPoints.Count);
+            int contourJump = (int)(PalmContourJumpPerc * contourPoints.Count) + 1;
             largestRadius = float.MinValue;
 
             bool validInside;
