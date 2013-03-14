@@ -84,9 +84,9 @@ namespace VirtualMouse
             borderEqs = new lineEq[4];
             this.cornerPoints = new PointCollection();
             this.cornerPoints.Add(cPoint(0, 0)); // top left
-            this.cornerPoints.Add(cPoint(0, 50)); // bot left
-            this.cornerPoints.Add(cPoint(50, 50)); // bot right
-            this.cornerPoints.Add(cPoint(50, 0)); // top right
+            this.cornerPoints.Add(cPoint(0, 100)); // bot left
+            this.cornerPoints.Add(cPoint(70, 100)); // bot right
+            this.cornerPoints.Add(cPoint(70, 0)); // top right
             this.DataContext = this;
         }
 

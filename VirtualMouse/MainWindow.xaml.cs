@@ -10,6 +10,7 @@ using System.Windows.Shapes;
 using Microsoft.Kinect;
 using System.Collections.Generic;
 using System.Windows.Input;
+using System.Windows.Forms;
 
 namespace VirtualMouse
 {
@@ -22,6 +23,9 @@ namespace VirtualMouse
         /// 
         /// </summary>
         User user = new User();
+
+        // finger stuff
+        System.Drawing.Point oldMousePos = new System.Drawing.Point();
 
         /// <summary>
         /// Boolean variables to help make event handler more robust
@@ -344,46 +348,62 @@ namespace VirtualMouse
                         }
                         double distance;
                         int fingerIndex;
+                        byte[] fingerColors = { 0, 0, 0 };
+                        int coloringRange = 3;
+                        double xMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxX - minX);
+                        double yMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxY - minY);
                         // Highlight fingers
                         foreach (Point finger in fingers)
                         {
                             fingerIndex = Helper.Point2Index(finger);
                             depth = depthImageData[fingerIndex].Depth;
                             distance = this.surfaceDetection.surface.DistanceToPoint(finger.X, finger.Y, (double)depth);
-                            int range = 3;
-                            if (distance < 16)
+                            if (distance < 18)
                             {
-                                
-                                for (int i = -range; i < range; i++)
+                                // fingers are touching the surface
+                                fingerColors[0] = 0;
+                                fingerColors[1] = 0;
+                                fingerColors[2] = 255;
+
+                                if (fingers.Count == 1)
                                 {
-                                    for (int j = -range; j < range; j++)
+                                    System.Drawing.Point newMousePos = System.Windows.Forms.Cursor.Position;
+                                    int posX = (int)((finger.X - minX * 2) * xMultiplier * 1.5);
+                                    int posY = (int)((maxY * 2 - finger.Y) * yMultiplier * 1.5);
+
+                                    double xDiff = oldMousePos.X - posX;
+                                    double yDiff = oldMousePos.Y - posY;
+                                    double delta = Math.Sqrt(xDiff * xDiff + yDiff * yDiff);
+                                    if (delta > 35)
                                     {
-                                        fingerIndex = 4 * Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
-                                        this.depthImageColor[fingerIndex] = 0;
-                                        this.depthImageColor[fingerIndex + 1] = 0;
-                                        this.depthImageColor[fingerIndex + 2] = 255;
+                                        System.Windows.Forms.Cursor.Position = new System.Drawing.Point(posX, posY);
+                                        oldMousePos = new System.Drawing.Point(posX, posY);
                                     }
                                 }
                             }
                             else
                             {
-                                for (int i = -range; i < range; i++)
+                                // fingers aren't touching the surface
+                                fingerColors[0] = 0;
+                                fingerColors[1] = 255;
+                                fingerColors[2] = 0;
+                            }
+                            for (int i = -coloringRange; i < coloringRange; i++)
+                            {
+                                for (int j = -coloringRange; j < coloringRange; j++)
                                 {
-                                    for (int j = -range; j < range; j++)
-                                    {
-                                        fingerIndex = 4*Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
-                                        this.depthImageColor[fingerIndex] = 0;
-                                        this.depthImageColor[fingerIndex + 1] = 255;
-                                        this.depthImageColor[fingerIndex + 2] = 0;
-                                    }
+                                    fingerIndex = 4 * Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
+                                    this.depthImageColor[fingerIndex] = fingerColors[0];
+                                    this.depthImageColor[fingerIndex + 1] = fingerColors[1];
+                                    this.depthImageColor[fingerIndex + 2] = fingerColors[2];
                                 }
                             }
                         }
 
                         // Highlight palm
-                        for (int i = -5; i < 5; i++)
+                        for (int i = -coloringRange; i < coloringRange; i++)
                         {
-                            for (int j = -5; j < 5; j++)
+                            for (int j = -coloringRange; j < coloringRange; j++)
                             {
                                 int index = 4 * Helper.Point2Index(new Point(palm.X + i, palm.Y + j));
                                 this.depthImageColor[index] = 0;

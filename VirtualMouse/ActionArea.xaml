@@ -33,20 +33,20 @@
                      MouseLeave="UnHighLightCorner"
                      MouseDown="SelectShape"
                      Canvas.Left="0"
-                     Canvas.Top="50">
+                     Canvas.Top="100">
             </Ellipse>
             <Ellipse x:Name="botRight" Width="10" Height="10" Fill="Blue"
                      MouseEnter="HighLightCorner" 
                      MouseLeave="UnHighLightCorner"
                      MouseDown="SelectShape"
-                     Canvas.Left="50"
-                     Canvas.Top="50">
+                     Canvas.Left="70"
+                     Canvas.Top="100">
             </Ellipse>
             <Ellipse x:Name="topRight" Width="10" Height="10" Fill="Blue" 
                      MouseEnter="HighLightCorner" 
                      MouseLeave="UnHighLightCorner"
                      MouseDown="SelectShape"
-                     Canvas.Left="50"
+                     Canvas.Left="70"
                      Canvas.Top="0">
             </Ellipse>
         </Canvas>
