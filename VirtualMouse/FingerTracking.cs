@@ -31,26 +31,22 @@ namespace VirtualMouse
         private bool[,] handMatrix;
         private bool[,] contourMatrix;
 
-        private Hand trackedHand = new Hand();
+        public Hand trackedHand { get; set; }
 
-        private bool b_Palm;
+        public bool hasPalm { get; set; }
+
+        public FingerTracking()
+        {
+            this.trackedHand = new Hand();
+        }
+
 
         public bool isContour(int x, int y)
         {
             return contourMatrix[x, y];
         }
 
-        public Hand getHand()
-        {
-            return trackedHand;
-        }
-
-        public bool hasPalm()
-        {
-            return b_Palm;
-        }
-
-        public void parseBinArray(bool[] binaryArray, double minX, double minY, double maxX, double maxY)
+        public Hand parseBinArray(bool[] binaryArray, double minX, double minY, double maxX, double maxY)
         {
             // Initialize local var
             handMatrix = new bool[Width, Height];
@@ -134,6 +130,8 @@ namespace VirtualMouse
             // Find palm and fingers
             findPalm();
             findFingers();
+            
+            return trackedHand;
         }
 
         /*
@@ -180,7 +178,7 @@ namespace VirtualMouse
         // Find a largest circle in the hand area and label the center as palm
         private void findPalm()
         {
-            b_Palm = false;
+            hasPalm = false;
             float minDistToContour, largestRadius, distance;
             int contourJump = (int)(PalmContourJumpPerc * trackedHand.contourPoints.Count) + 1;
             List<Point> possiblePalm = new List<Point>();
@@ -207,7 +205,7 @@ namespace VirtualMouse
                 {
                     largestRadius = minDistToContour;
                     possiblePalm.Add(trackedHand.insidePoints[j]);
-                    b_Palm = true;
+                    hasPalm = true;
                 }
             }
             if (possiblePalm.Count > 0)
