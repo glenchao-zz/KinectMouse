@@ -7,7 +7,7 @@ using System.Text;
 
 namespace VirtualMouse
 {
-    class GestureController
+    class GestureRecognizer
     {
         public double relativeX { get; set; }
         public double relativeY { get; set; }
@@ -16,7 +16,7 @@ namespace VirtualMouse
         public double yMultiplier { get; set; }
 
 
-        public delegate void GestureEvent(Point pt);
+        public delegate void GestureEvent(int fingers, int clicks, object obj);
         public event GestureEvent GestureReady;
 
         private Queue<Point> MovingBuffer;
@@ -34,7 +34,7 @@ namespace VirtualMouse
         const int cBufferLength = 15;
         const int cFilterLength = 4;
 
-        public GestureController()
+        public GestureRecognizer()
         {
             this.MovingBuffer = new Queue<Point>(mBufferLength);
             this.ClickBuffer = new Queue<double>(cBufferLength);
@@ -60,6 +60,7 @@ namespace VirtualMouse
                         foreach(double d in this.ClickBuffer)
                             Console.Write(d + " ");
                         Console.WriteLine(numFingers + " fingers click " + clickCount + " times");
+                        GestureReady(numFingers, clickCount, null);
                     }
                     this.Reset();
                     return;
@@ -106,7 +107,7 @@ namespace VirtualMouse
                     Point pos = new Point();
                     pos.X = (int)(this.MouseDownPos.X + this.MovingBuffer.Average(k => k.X) - FingerDownPos.X);
                     pos.Y = (int)(this.MouseDownPos.Y + this.MovingBuffer.Average(k => k.Y) - FingerDownPos.Y);
-                    GestureReady(pos);
+                    GestureReady(1, 0, pos);
                 }
             }
         }

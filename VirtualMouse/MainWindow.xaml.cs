@@ -25,8 +25,8 @@ namespace VirtualMouse
         User user = new User();
 
         // finger stuff
-        System.Drawing.Point oldMousePos;
-        GestureController gestureController = new GestureController();
+        GestureRecognizer recognizer;
+        GestureMapper mapper;
 
         /// <summary>
         /// Boolean variables to help make event handler more robust
@@ -121,10 +121,10 @@ namespace VirtualMouse
                 this.sensor.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
                 this.sensor.SkeletonStream.EnableTrackingInNearRange = true;
 
-                // Set up GestureController
-                this.gestureController.GestureReady += gestureController_GestureReady;
-                this.oldMousePos = System.Windows.Forms.Cursor.Position;
-                Console.WriteLine("Old Mouse: " + oldMousePos);
+                // Set up GestureRecognizer --> GestureMapper --> Action chain
+                this.recognizer = new GestureRecognizer();
+                this.mapper = new GestureMapper();
+                this.recognizer.GestureReady += this.mapper.MapGesture2Action;
 
                 // Set up ActionArea
                 this.actionArea.maxLength = this.sensor.DepthStream.FramePixelDataLength;
@@ -186,11 +186,6 @@ namespace VirtualMouse
             {
                 DebugMsg("No Kinect ready. Please plug in a kinect");
             }
-        }
-
-        void gestureController_GestureReady(System.Drawing.Point pt)
-        {
-            System.Windows.Forms.Cursor.Position = pt;
         }
 
         /// <summary>
@@ -360,7 +355,7 @@ namespace VirtualMouse
                         int fingerIndex;
                         int coloringRange = 3;
 
-                        gestureController.Add2Buffer(hand);
+                        recognizer.Add2Buffer(hand);
 
                         // Highlight fingers
                         Point pt;
@@ -431,10 +426,10 @@ namespace VirtualMouse
             double minY = Math.Max(0, Math.Min(topLeft.Y, topRight.Y));
             double maxY = Math.Min((RenderHeight / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
 
-            this.gestureController.xMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxX - minX);
-            this.gestureController.yMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxY - minY);
-            this.gestureController.relativeX = minX;
-            this.gestureController.relativeY = maxY;
+            this.recognizer.xMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxX - minX);
+            this.recognizer.yMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxY - minY);
+            this.recognizer.relativeX = minX;
+            this.recognizer.relativeY = maxY;
 
             Plane surface = surfaceDetection.getSurface((int)maxX, (int)maxY);
             if (surface == null)
