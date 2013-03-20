@@ -340,13 +340,13 @@ namespace VirtualMouse
                     double minY = Math.Max(0, Math.Min(topLeft.Y, topRight.Y));
                     double maxY = Math.Min((RenderHeight / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
                     
-                    Hand hand = fingerTracking.parseBinArray(binaryArray, minX, minY, maxX, maxY);
+                    Hand hand = fingerTracking.parseBinArray(binaryArray,depthImageData, minX, minY, maxX, maxY);
                     
                     // Highlight contour
                     List<Point> contourPoints = hand.contourPoints;
-                    List<Point> fingers = hand.fingertips;
+                    List<Fingertip> fingers = hand.fingertips;
                     Point palm = hand.palm;
-                    if (fingerTracking.hasPalm)//contourPoints.Count != 0 && fingers.Count != 0 && fingerTracking.hasPalm())
+                    if (hand.hasPalm)//contourPoints.Count != 0 && fingers.Count != 0 && fingerTracking.hasPalm())
                     {
                         // Highlight contour
                         foreach (Point p in contourPoints)
@@ -356,52 +356,27 @@ namespace VirtualMouse
                             this.depthImageColor[index + 1] = 255;
                             this.depthImageColor[index + 2] = 255;
                         }
-                        double distance;
+
                         int fingerIndex;
-                        byte[] fingerColors = { 0, 0, 0 };
                         int coloringRange = 3;
-                        double xMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxX - minX);
-                        double yMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxY - minY);
+
+                        gestureController.Add2Buffer(hand);
+
                         // Highlight fingers
-                        foreach (Point finger in fingers)
+                        Point pt;
+                        foreach (Fingertip fingertip in fingers)
                         {
-                            fingerIndex = Helper.Point2Index(finger);
-                            depth = depthImageData[fingerIndex].Depth;
-                            distance = this.surfaceDetection.surface.DistanceToPoint(finger.X, finger.Y, (double)depth);
-                            if (distance < 18)
-                            {
-                                // fingers are touching the surface
-                                fingerColors[0] = 0;
-                                fingerColors[1] = 0;
-                                fingerColors[2] = 255;
-
-                                if (fingers.Count == 1)
-                                {
-
-                                    int posX = (int)((finger.X - minX * 2) * xMultiplier * 1.1);
-                                    int posY = (int)((maxY * 2 - finger.Y) * yMultiplier * 1.1);
-
-                                    gestureController.Add2Buffer(new System.Drawing.Point(posX, posY));
-                                }
-                            }
-                            else
-                            {
-                                // fingers aren't touching the surface
-                                fingerColors[0] = 0;
-                                fingerColors[1] = 255;
-                                fingerColors[2] = 0;
-
-                                gestureController.MouseDownPos = System.Windows.Forms.Cursor.Position;
-                                gestureController.ResetBuffer();
-                            }
+                            pt = fingertip.point;
+                            fingerIndex = Helper.Point2Index(pt);
+  
                             for (int i = -coloringRange; i < coloringRange; i++)
                             {
                                 for (int j = -coloringRange; j < coloringRange; j++)
                                 {
-                                    fingerIndex = 4 * Helper.Point2Index(new Point(finger.X + i, finger.Y + j));
-                                    this.depthImageColor[fingerIndex] = fingerColors[0];
-                                    this.depthImageColor[fingerIndex + 1] = fingerColors[1];
-                                    this.depthImageColor[fingerIndex + 2] = fingerColors[2];
+                                    fingerIndex = 4 * Helper.Point2Index(new Point(pt.X + i, pt.Y + j));
+                                    this.depthImageColor[fingerIndex] = 0;
+                                    this.depthImageColor[fingerIndex + 1] = 0;
+                                    this.depthImageColor[fingerIndex + 2] = 255;
                                 }
                             }
                         }
@@ -446,11 +421,21 @@ namespace VirtualMouse
 
             surfaceDetection.definitionPoint = point;
 
+            Point topLeft = actionArea.cornerPoints[(int)ActionArea.corners.topLeft];
             Point topRight = actionArea.cornerPoints[(int)ActionArea.corners.topRight];
             Point botLeft = actionArea.cornerPoints[(int)ActionArea.corners.botLeft];
             Point botRight = actionArea.cornerPoints[(int)ActionArea.corners.botRight];
-            double maxX = Math.Min((Width / 2 - 1), Math.Max(topRight.X, botRight.X));
-            double maxY = Math.Min((Height / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
+
+            double minX = Math.Max(0, Math.Min(topLeft.X, botLeft.X));
+            double maxX = Math.Min((RenderWidth / 2 - 1), Math.Max(topRight.X, botRight.X));
+            double minY = Math.Max(0, Math.Min(topLeft.Y, topRight.Y));
+            double maxY = Math.Min((RenderHeight / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
+
+            this.gestureController.xMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxX - minX);
+            this.gestureController.yMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxY - minY);
+            this.gestureController.relativeX = minX;
+            this.gestureController.relativeY = maxY;
+
             Plane surface = surfaceDetection.getSurface((int)maxX, (int)maxY);
             if (surface == null)
             {
@@ -458,6 +443,8 @@ namespace VirtualMouse
                 return;
             }
             Helper.SaveSurface(surface);
+            this.fingerTracking.Surface = surface;
+
             DebugMsg("***************************************");
             DebugMsg("Origin   -- " + surfaceDetection.origin.ToString());
             DebugMsg("Sample1  -- " + surfaceDetection.sample1.ToString());

@@ -10,22 +10,27 @@ namespace VirtualMouse
     {
         public List<Point> contourPoints { get; set; }
         public List<Point> insidePoints { get; set; }
-        public List<Point> fingertips { get; set; }
-        public bool b_Palm { get; set; }
+        public List<Fingertip> fingertips { get; set; }
+        public bool hasPalm { get; set; }
         public Point palm { get; set; }
 
         public Hand()
         {
             contourPoints = new List<Point>();
-            insidePoints = new List<Point>(); 
-            fingertips = new List<Point>();
+            insidePoints = new List<Point>();
+            fingertips = new List<Fingertip>();
         }
+    }
 
-        public void reset()
+    class Fingertip
+    {
+        public Point point { get; set; }
+        public bool isTouching { get; set; }
+
+        public Fingertip(Point pt, bool isTouching)
         {
-            contourPoints.Clear();
-            insidePoints.Clear();
-            fingertips.Clear();
+            this.point = pt;
+            this.isTouching = isTouching;
         }
     }
 }

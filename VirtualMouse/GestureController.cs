@@ -9,40 +9,119 @@ namespace VirtualMouse
 {
     class GestureController
     {
+        public double relativeX { get; set; }
+        public double relativeY { get; set; }
+
+        public double xMultiplier { get; set; }
+        public double yMultiplier { get; set; }
+
+
         public delegate void GestureEvent(Point pt);
         public event GestureEvent GestureReady;
 
-        private Queue<Point> Buffer;
+        private Queue<Point> MovingBuffer;
+        private Queue<double> ClickBuffer;
+        private Queue<double> ClickFilter;
+
         public Point FingerDownPos;
         public Point MouseDownPos;
 
+        private int zeroCount = 0;
+        private int clickCount = 0;
+        private int numFingers = 0;
+
+        const int mBufferLength = 10;
+        const int cBufferLength = 15;
+        const int cFilterLength = 4;
+
         public GestureController()
         {
-            Buffer = new Queue<Point>(10);
+            this.MovingBuffer = new Queue<Point>(mBufferLength);
+            this.ClickBuffer = new Queue<double>(cBufferLength);
+            this.ClickFilter = new Queue<double>(cFilterLength);
         }
 
-        public void Add2Buffer(Point pt)
+        public void Add2Buffer(Hand hand)
         {
             // If buffer is full
-            if (this.Buffer.Count == 10)
+            if (this.MovingBuffer.Count == mBufferLength)
+                this.MovingBuffer.Dequeue();
+            if (this.ClickBuffer.Count == cBufferLength)
+                this.ClickBuffer.Dequeue();
+            if (this.ClickFilter.Count == cFilterLength)
+                this.ClickFilter.Dequeue();
+
+            if (hand.fingertips.Count == 0)
             {
-                // pop
-                this.Buffer.Dequeue();
+                if (++this.zeroCount == 5)
+                {
+                    if (this.clickCount > 0)
+                    {
+                        foreach(double d in this.ClickBuffer)
+                            Console.Write(d + " ");
+                        Console.WriteLine(numFingers + " fingers click " + clickCount + " times");
+                    }
+                    this.Reset();
+                    return;
+                }
             }
-            if (this.Buffer.Count == 0)
+            else
             {
-                FingerDownPos = pt;
+                this.zeroCount = 0;
+                this.numFingers = Math.Max(hand.fingertips.Count, numFingers);
             }
-            this.Buffer.Enqueue(pt);
-            Point pos = new Point();
-            pos.X = (int)(this.MouseDownPos.X + this.Buffer.Average(k => k.X) - FingerDownPos.X);
-            pos.Y = (int)(this.MouseDownPos.Y + this.Buffer.Average(k => k.Y) - FingerDownPos.Y);
-            GestureReady(pos);
+
+            // Cursor click setup
+            ClickFilter.Enqueue(hand.fingertips.Count > 0 ? 1 : 0);
+            this.ClickBuffer.Enqueue(ClickFilter.Average());
+
+            bool tooClose = false;
+            this.clickCount = 0;
+            foreach (double d in this.ClickBuffer)
+            {
+                if (d == 0.50 && !tooClose)
+                {
+                    tooClose = true;
+                    this.clickCount++;
+                }
+                else
+                    tooClose = false;
+
+            }
+            this.clickCount = this.clickCount / 2;
+
+            // Cursor move setup
+            if (hand.fingertips.Count == 1)
+            {
+                Point finger = Helper.Convert2DrawingPoint(hand.fingertips[0].point);
+                finger.X = (int)((finger.X - relativeX * 2) * xMultiplier * 1.1);
+                finger.Y = (int)((relativeY * 2 - finger.Y) * yMultiplier * 1.1);
+                this.MovingBuffer.Enqueue(finger);
+                if (this.MovingBuffer.Count == 1)
+                {
+                    FingerDownPos = this.MovingBuffer.ElementAt(0);
+                }
+                else if (this.MovingBuffer.Count > mBufferLength * 2 / 3)
+                {
+                    Point pos = new Point();
+                    pos.X = (int)(this.MouseDownPos.X + this.MovingBuffer.Average(k => k.X) - FingerDownPos.X);
+                    pos.Y = (int)(this.MouseDownPos.Y + this.MovingBuffer.Average(k => k.Y) - FingerDownPos.Y);
+                    GestureReady(pos);
+                }
+            }
         }
 
-        public void ResetBuffer()
+            
+
+        public void Reset()
         {
-            this.Buffer.Clear();
+            this.MovingBuffer.Clear();
+            this.ClickBuffer.Clear();
+            this.ClickFilter.Clear();
+            this.zeroCount = 0;
+            this.clickCount = 0;
+            this.numFingers = 0;
+            this.MouseDownPos = System.Windows.Forms.Cursor.Position;
         }
 
 

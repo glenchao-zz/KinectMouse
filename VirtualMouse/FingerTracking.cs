@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Kinect;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,9 @@ namespace VirtualMouse
 {
     internal class FingerTracking
     {
+        // Plane equation of the surface we're tracking 
+        public Plane Surface { get; set; }
+
         private const int Width = 640;
         private const int Height = 480;
 
@@ -24,16 +28,14 @@ namespace VirtualMouse
          * K-curvature parameters
          */
         // Num of points away between three sample points
-        private const int K = 30;
+        private const int K = 35;
         // Angle formed by three sample points
-        private const double Theta = 40 * (Math.PI / 180);
+        private const double Theta = 45 * (Math.PI / 180);
 
         private bool[,] handMatrix;
         private bool[,] contourMatrix;
 
         public Hand trackedHand { get; set; }
-
-        public bool hasPalm { get; set; }
 
         public FingerTracking()
         {
@@ -46,12 +48,12 @@ namespace VirtualMouse
             return contourMatrix[x, y];
         }
 
-        public Hand parseBinArray(bool[] binaryArray, double minX, double minY, double maxX, double maxY)
+        public Hand parseBinArray(bool[] binaryArray, DepthImagePixel[] depthImageData, double minX, double minY, double maxX, double maxY)
         {
             // Initialize local var
             handMatrix = new bool[Width, Height];
             contourMatrix = new bool[Width, Height];
-            trackedHand.reset();
+            trackedHand = new Hand();
 
             // Conver binaryArray to a binary handMatrix
             int index;
@@ -129,7 +131,7 @@ namespace VirtualMouse
 
             // Find palm and fingers
             findPalm();
-            findFingers();
+            findFingers(depthImageData);
             
             return trackedHand;
         }
@@ -178,7 +180,7 @@ namespace VirtualMouse
         // Find a largest circle in the hand area and label the center as palm
         private void findPalm()
         {
-            hasPalm = false;
+            trackedHand.hasPalm = false;
             float minDistToContour, largestRadius, distance;
             int contourJump = (int)(PalmContourJumpPerc * trackedHand.contourPoints.Count) + 1;
             List<Point> possiblePalm = new List<Point>();
@@ -205,7 +207,7 @@ namespace VirtualMouse
                 {
                     largestRadius = minDistToContour;
                     possiblePalm.Add(trackedHand.insidePoints[j]);
-                    hasPalm = true;
+                    trackedHand.hasPalm = true;
                 }
             }
             if (possiblePalm.Count > 0)
@@ -214,7 +216,7 @@ namespace VirtualMouse
                 trackedHand.palm = new Point();
         }
 
-        private void findFingers()
+        private void findFingers(DepthImagePixel[] depthImageData)
         {
             int numPoints = trackedHand.contourPoints.Count;
             Point p1, p2, p3, palm;
@@ -224,6 +226,7 @@ namespace VirtualMouse
             if (K > numPoints) return;// || !b_Palm) return;
 
             // Find the fingertips
+            double distance, depth;
             for (int i = K; i < numPoints - K; i++)
             {
                 p1 = trackedHand.contourPoints[i - K];
@@ -240,8 +243,11 @@ namespace VirtualMouse
                     if (dp2 < distanceEuclideanSquared(p1, palm) &&
                         dp2 < distanceEuclideanSquared(p3, palm))
                         continue;
-
-                    trackedHand.fingertips.Add(p2);
+                    depth = (double)depthImageData[Helper.Point2Index(p2)].Depth;
+                    distance = this.Surface.DistanceToPoint(p2.X, p2.Y, depth);
+                    if(distance < 14)
+                        trackedHand.fingertips.Add(new Fingertip(p2, true));
+                    
                     i += (int)(FingerJumpPerc * numPoints);
                 }
             }

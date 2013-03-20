@@ -12,6 +12,11 @@ namespace VirtualMouse
 {
     static class Helper
     {
+        public static System.Drawing.Point Convert2DrawingPoint(Point pt)
+        {
+            return new System.Drawing.Point((int)pt.X, (int)pt.Y);
+        }
+
         public static void SaveSurface(Plane surface)
         {
             Properties.Settings.Default.SurfaceX = surface.normal.x;
