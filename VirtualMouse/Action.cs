@@ -20,6 +20,14 @@ namespace VirtualMouse
         private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
         private const int MOUSEEVENTF_RIGHTUP = 0x10;
 
+        public static void DownLeft()
+        {
+            // Call the imported function with the cursor's current position
+            uint X = (uint)Cursor.Position.X;
+            uint Y = (uint)Cursor.Position.Y;
+            mouse_event(MOUSEEVENTF_LEFTDOWN, X, Y, 0, 0);
+        }
+
         public static void ClickLeft()
         {
             // Call the imported function with the cursor's current position
@@ -39,6 +47,11 @@ namespace VirtualMouse
         public static void Move(Point pt)
         {
             Cursor.Position = pt;
+        }
+
+        public static void ClearAction()
+        {
+            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
         }
 
     }

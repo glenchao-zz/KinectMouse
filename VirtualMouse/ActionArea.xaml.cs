@@ -90,6 +90,39 @@ namespace VirtualMouse
             this.DataContext = this;
         }
 
+        public void LoadActionArea(Point topLeft, Point botLeft, Point botRight, Point topRight)
+        {
+            borderEqs = new lineEq[4];
+            this.cornerPoints = new PointCollection();
+            this.cornerPoints.Add(topLeft); // top left
+            this.cornerPoints.Add(botLeft); // bot left
+            this.cornerPoints.Add(botRight); // bot right
+            this.cornerPoints.Add(topRight); // top right
+
+            for (int i = 0; i < this.cornerPoints.Count; i++)
+            {
+                Canvas.SetLeft(this.actionCanvas.Children[i + ellipseIndex], this.cornerPoints[i].X - ellipseWidth / 2);
+                Canvas.SetTop(this.actionCanvas.Children[i + ellipseIndex], this.cornerPoints[i].Y - ellipseWidth / 2);
+            }
+
+            this.DataContext = this;
+        }
+
+        public void InitActionArea()
+        {
+
+            GetBorderEquations();
+            GetValidIndices();
+        }
+
+        public Point MidPoint()
+        {
+            return new Point(new[] { _cornerPoints[(int)corners.topLeft].X, 
+                                     _cornerPoints[(int)corners.topRight].X }.Average(),
+                             new[] { _cornerPoints[(int)corners.topRight].Y, 
+                                     _cornerPoints[(int)corners.botRight].Y }.Average());
+        }
+
         private void HighLightCorner(object sender, MouseEventArgs e)
         {
             if (sender.GetType() == typeof(Ellipse))
@@ -150,8 +183,7 @@ namespace VirtualMouse
             pointArray[index] = new Point(mouse.X, mouse.Y);
             this.cornerPoints = new PointCollection(pointArray);
 
-            GetBorderEquations();
-            GetValidIndices();
+            InitActionArea();
         }
 
         private void MovePolygon(object sender, MouseEventArgs e)
@@ -167,8 +199,7 @@ namespace VirtualMouse
                 Canvas.SetTop(this.actionCanvas.Children[i + ellipseIndex], pointArray[i].Y - ellipseWidth / 2);
             }
             this.cornerPoints = new PointCollection(pointArray);
-            GetBorderEquations();
-            GetValidIndices();
+            InitActionArea();
         }
 
         private void GetValidIndices()

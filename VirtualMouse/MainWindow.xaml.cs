@@ -33,7 +33,6 @@ namespace VirtualMouse
         /// </summary>
         private bool b_InitializeEnvironment = false;
         private bool b_ColorPlaneDepthFrame = false;
-        private bool b_ActionSurfaceConfirmed = false;
 
         /// <summary>
         /// Width and Height of the output drawing
@@ -123,12 +122,9 @@ namespace VirtualMouse
 
                 // Set up GestureRecognizer --> GestureMapper --> Action chain
                 this.recognizer = new GestureRecognizer();
+                Helper.LoadRecognizer(this.recognizer);
                 this.mapper = new GestureMapper();
                 this.recognizer.GestureReady += this.mapper.MapGesture2Action;
-
-                // Set up ActionArea
-                this.actionArea.maxLength = this.sensor.DepthStream.FramePixelDataLength;
-                this.actionArea.ConfirmCallBack += actionArea_ConfirmCallBack;
 
                 // Allocate space to put the pixels we'll receive
                 this.depthImageData = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
@@ -164,22 +160,27 @@ namespace VirtualMouse
                     DebugMsg(ex.Message);
                 }
 
+                // Set up ActionArea
+                Helper.LoadActionArea(this.actionArea);
+                this.actionArea.maxLength = this.sensor.DepthStream.FramePixelDataLength;
+                this.actionArea.ConfirmCallBack += actionArea_ConfirmCallBack;
+                this.actionArea.InitActionArea();
 
-                Plane surface = Helper.LoadSurface();
-                if (surface != null)
+                // Set up surface
+                surfaceDetection.surface = Helper.LoadSurface();
+                fingerTracking.surface = surfaceDetection.surface;
+                if (this.surfaceDetection.surface == null)
                 {
-                    surfaceDetection.surface = surface;
-                    DebugMsg("Save surface settings loaded");
-                    DebugMsg(surface.ToString());
-                    b_ColorPlaneDepthFrame = true;
-                    this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
+                    InitializeEnvironmentButton_Click(null, null);
                 }
                 else
                 {
-                    // Add an event handler to be called whenever there is a color, depth, or skeleton frame data is ready
+                    DebugMsg(surfaceDetection.surface.ToString());
                     b_InitializeEnvironment = true;
                     this.sensor.DepthFrameReady += InitializeEnvironment;
                 }
+                
+
             }
 
             if (this.sensor == null)
@@ -250,10 +251,17 @@ namespace VirtualMouse
                         this.depthBitmap.PixelWidth * sizeof(int),
                         0);
 
+                    
                     DebugMsg("Un-hook InitializeEnvironment");
                     this.sensor.DepthFrameReady -= InitializeEnvironment;
                     b_InitializeEnvironment = false;
                     DebugMsg("Hook  up DefineSurface");
+
+                    if (this.surfaceDetection.surface != null)
+                    {
+                        b_ColorPlaneDepthFrame = true;
+                        this.sensor.DepthFrameReady += ColorPlaneDepthFrame;
+                    }
                 }
             }
         }
@@ -307,10 +315,20 @@ namespace VirtualMouse
                             if (percentDiff > 1.008) // sketchy numbers... need to tweek 
                                 // Is the hand
                                 binaryArray[i] = true;
-
-                            this.depthImageColor[colorPixelIndex++] = 0;
-                            this.depthImageColor[colorPixelIndex++] = 100;
-                            this.depthImageColor[colorPixelIndex++] = 0;
+                            Point pt = Helper.Index2Point(i);
+                            double diff = this.surfaceDetection.surface.DistanceToPoint(new Vector(pt.X, pt.Y, depth));
+                            if (diff < 14)
+                            {
+                                this.depthImageColor[colorPixelIndex++] = 0;
+                                this.depthImageColor[colorPixelIndex++] = 100;
+                                this.depthImageColor[colorPixelIndex++] = 0;
+                            }
+                            else
+                            {
+                                this.depthImageColor[colorPixelIndex++] = 0;
+                                this.depthImageColor[colorPixelIndex++] = 0;
+                                this.depthImageColor[colorPixelIndex++] = 100;
+                            }
                         }
                         else
                         {
@@ -438,7 +456,12 @@ namespace VirtualMouse
                 return;
             }
             Helper.SaveSurface(surface);
-            this.fingerTracking.Surface = surface;
+            Helper.SaveActionArea(topLeft, botLeft, botRight, topRight);
+            Helper.SaveRecognizer(this.recognizer.xMultiplier, 
+                                  this.recognizer.yMultiplier,
+                                  this.recognizer.relativeX,
+                                  this.recognizer.relativeY);
+            this.fingerTracking.surface = surface;
 
             DebugMsg("***************************************");
             DebugMsg("Origin   -- " + surfaceDetection.origin.ToString());
@@ -468,6 +491,9 @@ namespace VirtualMouse
                 return;
 
             this.actionArea.Visibility = System.Windows.Visibility.Visible;
+            
+            surfaceDetection.surface = null;
+            fingerTracking.surface = null; 
 
             b_ColorPlaneDepthFrame = false;
             this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
@@ -502,18 +528,13 @@ namespace VirtualMouse
 
         void actionArea_ConfirmCallBack()
         {
-            b_ActionSurfaceConfirmed = true;
-        }
-
-        private void canvas_debug_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (b_ActionSurfaceConfirmed)
-            {
-                Point point = Mouse.GetPosition(canvas_debug);
+            //b_ActionSurfaceConfirmed = true;
+            //if (b_ActionSurfaceConfirmed)
+            //{
+                Point point = this.actionArea.MidPoint();
                 DefineSurface(point);
                 this.actionArea.Visibility = System.Windows.Visibility.Collapsed;
-            }
-            b_ActionSurfaceConfirmed = false;
+            //}
         }
 
         private void DebugMsg(string msg)

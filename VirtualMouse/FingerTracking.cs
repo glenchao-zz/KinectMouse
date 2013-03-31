@@ -10,7 +10,7 @@ namespace VirtualMouse
     internal class FingerTracking
     {
         // Plane equation of the surface we're tracking 
-        public Plane Surface { get; set; }
+        public Plane surface { get; set; }
 
         private const int Width = 640;
         private const int Height = 480;
@@ -244,7 +244,7 @@ namespace VirtualMouse
                         dp2 < distanceEuclideanSquared(p3, palm))
                         continue;
                     depth = (double)depthImageData[Helper.Point2Index(p2)].Depth;
-                    distance = this.Surface.DistanceToPoint(p2.X, p2.Y, depth);
+                    distance = this.surface.DistanceToPoint(p2.X, p2.Y, depth);
                     if(distance < 14)
                         trackedHand.fingertips.Add(new Fingertip(p2, true));
                     

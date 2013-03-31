@@ -7,6 +7,7 @@
     Title="MainWindow"
     Height="700"
     Width="974"
+    Topmost="True"
     Loaded="WindowLoaded"
     Closing="WindowClosing">
     <Grid>
@@ -29,9 +30,7 @@
             <Viewbox Stretch="Uniform">
                 <Image x:Name="depthImage_debug" Width="320" Height="240" />
             </Viewbox>
-            <Canvas x:Name="canvas_debug" Width="320" Height="240" MouseDown="canvas_debug_MouseDown" Background="Transparent">
-                <my:ActionArea x:Name="actionArea" Width="320" Height="240" Visibility="Collapsed"></my:ActionArea>
-            </Canvas>
+            <my:ActionArea x:Name="actionArea" Width="320" Height="240" Visibility="Collapsed"></my:ActionArea>
         </Grid>
         <StackPanel Grid.Row="2" Grid.Column="0" Margin="10">
             <StackPanel Orientation="Horizontal">

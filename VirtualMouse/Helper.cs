@@ -17,6 +17,54 @@ namespace VirtualMouse
             return new System.Drawing.Point((int)pt.X, (int)pt.Y);
         }
 
+        public static void SaveRecognizer(double yMult, double xMult, double relX, double relY)
+        {
+            Properties.Settings.Default.yMultiplier = yMult;
+            Properties.Settings.Default.xMultiplier = xMult;
+            Properties.Settings.Default.relativeX = relX;
+            Properties.Settings.Default.relativeY = relY;
+            Properties.Settings.Default.b_Recognizer = true;
+            Properties.Settings.Default.Save();
+        }
+
+        public static void LoadRecognizer(GestureRecognizer gr)
+        {
+            if (Properties.Settings.Default.b_Recognizer)
+            {
+                gr.yMultiplier = Properties.Settings.Default.yMultiplier;
+                gr.xMultiplier = Properties.Settings.Default.xMultiplier;
+                gr.relativeX = Properties.Settings.Default.relativeX;
+                gr.relativeY = Properties.Settings.Default.relativeY;
+            }
+        }
+
+        public static void SaveActionArea(Point topLeft, Point botLeft, Point botRight, Point topRight)
+        {
+            Properties.Settings.Default.topLeftX = topLeft.X;
+            Properties.Settings.Default.topLeftY = topLeft.Y;
+            Properties.Settings.Default.botLeftX = botLeft.X;
+            Properties.Settings.Default.botLeftY = botLeft.Y;
+            Properties.Settings.Default.botRightX = botRight.X;
+            Properties.Settings.Default.botRightY = botRight.Y;
+            Properties.Settings.Default.topRightX = topRight.X;
+            Properties.Settings.Default.topRightY = topRight.Y;
+            Properties.Settings.Default.b_ActionArea = true;
+            Properties.Settings.Default.Save();
+        }
+
+        public static void LoadActionArea(ActionArea actionArea)
+        {
+            if (Properties.Settings.Default.b_ActionArea)
+                actionArea.LoadActionArea(new Point(Properties.Settings.Default.topLeftX,
+                                                    Properties.Settings.Default.topLeftY),
+                                          new Point(Properties.Settings.Default.botLeftX,
+                                                    Properties.Settings.Default.botLeftY),
+                                          new Point(Properties.Settings.Default.botRightX,
+                                                    Properties.Settings.Default.botRightY),
+                                          new Point(Properties.Settings.Default.topRightX,
+                                                    Properties.Settings.Default.topRightY));
+        }
+
         public static void SaveSurface(Plane surface)
         {
             Properties.Settings.Default.SurfaceX = surface.normal.x;
@@ -32,11 +80,10 @@ namespace VirtualMouse
             if (!Properties.Settings.Default.b_Surface)
                 return null;
 
-            Plane surface = new Plane(Properties.Settings.Default.SurfaceX,
+            return new Plane(Properties.Settings.Default.SurfaceX,
                                       Properties.Settings.Default.SurfaceY,
                                       Properties.Settings.Default.SurfaceZ,
                                       Properties.Settings.Default.SurfaceD);
-            return surface;
         }
 
         public static double GetMostCommonDepthImagePixel(DepthImagePixel[] data, int start, int length)
