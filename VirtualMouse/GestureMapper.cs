@@ -14,8 +14,14 @@ namespace VirtualMouse
                 Action.Move((Point)obj);
             else if (obj == null && fingers == 1 && clicks == 1)
                 Action.ClickLeft();
+            else if (obj == null && fingers == 1 && clicks == 2)
+            {
+                Action.ClickLeft();
+                Action.ClickLeft();
+            }
             else if (obj == null && fingers == 2 && clicks == 1)
                 Action.ClickRight();
+            
         }
     }
 }

@@ -57,8 +57,6 @@ namespace VirtualMouse
                 {
                     if (this.clickCount > 0)
                     {
-                        foreach(double d in this.ClickBuffer)
-                            Console.Write(d + " ");
                         Console.WriteLine(numFingers + " fingers click " + clickCount + " times");
                         GestureReady(numFingers, clickCount, null);
                     }
@@ -118,7 +116,7 @@ namespace VirtualMouse
         {
             this.MovingBuffer.Clear();
             this.ClickBuffer.Clear();
-            this.ClickFilter.Clear();
+            this.ClickFilter = new Queue<double>(new[] { 0.0, 0.0, 0.0, 0.0 });
             this.zeroCount = 0;
             this.clickCount = 0;
             this.numFingers = 0;
