@@ -84,9 +84,16 @@ namespace VirtualMouse
             borderEqs = new lineEq[4];
             this.cornerPoints = new PointCollection();
             this.cornerPoints.Add(cPoint(0, 0)); // top left
-            this.cornerPoints.Add(cPoint(0, 100)); // bot left
-            this.cornerPoints.Add(cPoint(70, 100)); // bot right
-            this.cornerPoints.Add(cPoint(70, 0)); // top right
+            this.cornerPoints.Add(cPoint(0, 200)); // bot left
+            this.cornerPoints.Add(cPoint(140, 200)); // bot right
+            this.cornerPoints.Add(cPoint(140, 0)); // top right
+            
+            for (int i = 0; i < this.cornerPoints.Count; i++)
+            {
+                Canvas.SetLeft(this.actionCanvas.Children[i + ellipseIndex], this.cornerPoints[i].X - ellipseWidth / 2);
+                Canvas.SetTop(this.actionCanvas.Children[i + ellipseIndex], this.cornerPoints[i].Y - ellipseWidth / 2);
+            }
+
             this.DataContext = this;
         }
 
@@ -275,8 +282,8 @@ namespace VirtualMouse
 
         public lineEq(Point p1, Point p2)
         {
-            this.p1 = new Point(p1.X * 2, p1.Y * 2);
-            this.p2 = new Point(p2.X * 2, p2.Y * 2);
+            this.p1 = new Point(p1.X, p1.Y);
+            this.p2 = new Point(p2.X, p2.Y);
             this.m = (this.p2.Y - this.p1.Y) / (this.p2.X - this.p1.X);
             this.b = -this.p1.X * this.m + this.p1.Y;
         }

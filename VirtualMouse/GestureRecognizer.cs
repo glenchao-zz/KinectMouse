@@ -100,8 +100,8 @@ namespace VirtualMouse
                 }
                 
                 Point finger = Helper.Convert2DrawingPoint(hand.fingertips[0].point);
-                finger.X = (int)((finger.X - relativeX * 2) * xMultiplier * 1.1);
-                finger.Y = (int)((relativeY * 2 - finger.Y) * yMultiplier * 1.1);
+                finger.X = (int)((finger.X - relativeX) * xMultiplier * 1.1);
+                finger.Y = (int)((relativeY - finger.Y) * yMultiplier * 1.1);
                 this.MovingBuffer.Enqueue(finger);
                 if (this.MovingBuffer.Count == 1)
                 {

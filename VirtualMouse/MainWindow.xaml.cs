@@ -49,7 +49,7 @@ namespace VirtualMouse
         /// Bitmaps that will hold depth info
         /// </summary>
         private WriteableBitmap depthBitmap;
-        private WriteableBitmap depthBitmap_debug;
+
         /// <summary>
         /// Buffers for the depth data received from the camera
         /// </summary>
@@ -59,7 +59,6 @@ namespace VirtualMouse
         /// Byte array that actually stores the color to draw
         /// </summary>
         private byte[] depthImageColor;
-        private byte[] depthImageColor_debug;
 
         /// <summary>
         /// Surface detection object that handles all the detection methods
@@ -129,7 +128,6 @@ namespace VirtualMouse
                 // Allocate space to put the pixels we'll receive
                 this.depthImageData = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
                 this.depthImageColor = new byte[this.sensor.DepthStream.FramePixelDataLength * sizeof(int)];
-                this.depthImageColor_debug = new byte[this.sensor.DepthStream.FramePixelDataLength * sizeof(int)];
                 this.surfaceMatrix = new int[this.sensor.DepthStream.FramePixelDataLength * sizeof(int)];
 
                 // Initialize the bitmap we'll display on-screen 
@@ -139,16 +137,10 @@ namespace VirtualMouse
                                                        96.0,
                                                        PixelFormats.Bgr32,
                                                        null);
-                this.depthBitmap_debug = new WriteableBitmap(this.sensor.DepthStream.FrameWidth,
-                                                       this.sensor.DepthStream.FrameHeight,
-                                                       96.0,
-                                                       96.0,
-                                                       PixelFormats.Bgr32,
-                                                       null);
 
                 // Set the depth image we display to point to the bitmap where we'll put the image data
                 this.depthImage.Source = this.depthBitmap;
-                this.depthImage_debug.Source = this.depthBitmap_debug;
+
                 // Start the sensor
                 try
                 {
@@ -235,9 +227,9 @@ namespace VirtualMouse
                         // Get the depth for this pixel 
                         short depth = surfaceDetection.emptyFrame[i].Depth;
                         byte intensity = (byte)(depth >= minDepth && depth <= maxDepth ? depth : 0);
-                        this.depthImageColor_debug[colorPixelIndex++] = intensity; // Write the blue byte
-                        this.depthImageColor_debug[colorPixelIndex++] = intensity; // Write the green byte
-                        this.depthImageColor_debug[colorPixelIndex++] = intensity; // Write the red byte
+                        this.depthImageColor[colorPixelIndex++] = intensity; // Write the blue byte
+                        this.depthImageColor[colorPixelIndex++] = intensity; // Write the green byte
+                        this.depthImageColor[colorPixelIndex++] = intensity; // Write the red byte
 
                         // We're otuputting BGR, the last byte in teh 32 bits is unused so skip it 
                         // If we were outputting BGRA, we would write alpha here.
@@ -245,9 +237,9 @@ namespace VirtualMouse
                     }
 
                     // Write the pixel data into our bitmap
-                    this.depthBitmap_debug.WritePixels(
+                    this.depthBitmap.WritePixels(
                         new Int32Rect(0, 0, this.depthBitmap.PixelWidth, this.depthBitmap.PixelHeight),
-                        this.depthImageColor_debug,
+                        this.depthImageColor,
                         this.depthBitmap.PixelWidth * sizeof(int),
                         0);
 
@@ -349,9 +341,9 @@ namespace VirtualMouse
                     Point botRight = actionArea.cornerPoints[(int)ActionArea.corners.botRight];
                     
                     double minX = Math.Max(0, Math.Min(topLeft.X, botLeft.X));
-                    double maxX = Math.Min((RenderWidth / 2 - 1), Math.Max(topRight.X, botRight.X));
+                    double maxX = Math.Min((RenderWidth - 1), Math.Max(topRight.X, botRight.X));
                     double minY = Math.Max(0, Math.Min(topLeft.Y, topRight.Y));
-                    double maxY = Math.Min((RenderHeight / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
+                    double maxY = Math.Min((RenderHeight - 1), Math.Min(botLeft.Y, botRight.Y));
                     
                     Hand hand = fingerTracking.parseBinArray(binaryArray,depthImageData, minX, minY, maxX, maxY);
                     
@@ -428,8 +420,6 @@ namespace VirtualMouse
             b_ColorPlaneDepthFrame = false;
             this.sensor.DepthFrameReady -= ColorPlaneDepthFrame;
 
-            point.X *= 2;
-            point.Y *= 2;
             DebugMsg("X: " + point.X + " Y: " + point.Y);
 
             surfaceDetection.definitionPoint = point;
@@ -440,9 +430,9 @@ namespace VirtualMouse
             Point botRight = actionArea.cornerPoints[(int)ActionArea.corners.botRight];
 
             double minX = Math.Max(0, Math.Min(topLeft.X, botLeft.X));
-            double maxX = Math.Min((RenderWidth / 2 - 1), Math.Max(topRight.X, botRight.X));
+            double maxX = Math.Min((RenderWidth - 1), Math.Max(topRight.X, botRight.X));
             double minY = Math.Max(0, Math.Min(topLeft.Y, topRight.Y));
-            double maxY = Math.Min((RenderHeight / 2 - 1), Math.Min(botLeft.Y, botRight.Y));
+            double maxY = Math.Min((RenderHeight - 1), Math.Min(botLeft.Y, botRight.Y));
 
             this.recognizer.xMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxX - minX);
             this.recognizer.yMultiplier = Screen.PrimaryScreen.Bounds.Height / (maxY - minY);
@@ -501,40 +491,10 @@ namespace VirtualMouse
             this.sensor.DepthFrameReady += InitializeEnvironment;
         }
 
-
-        private void NearFieldButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Try to use near mode if possible 
-            try
-            {
-                if (this.sensor.DepthStream.Range == DepthRange.Default)
-                {
-                    this.sensor.SkeletonStream.EnableTrackingInNearRange = true;
-                    this.sensor.DepthStream.Range = DepthRange.Near;
-                    nearFieldButton.Content = "Turn Off";
-                }
-                else
-                {
-                    this.sensor.SkeletonStream.EnableTrackingInNearRange = false;
-                    this.sensor.DepthStream.Range = DepthRange.Default;
-                    nearFieldButton.Content = "Turn On";
-                }
-            }
-            catch (InvalidCastException ex)
-            {
-                DebugMsg("Near field mode: " + ex.Message);
-            }
-        }
-
         void actionArea_ConfirmCallBack()
         {
-            //b_ActionSurfaceConfirmed = true;
-            //if (b_ActionSurfaceConfirmed)
-            //{
-                Point point = this.actionArea.MidPoint();
-                DefineSurface(point);
-                this.actionArea.Visibility = System.Windows.Visibility.Collapsed;
-            //}
+            DefineSurface(this.actionArea.MidPoint());
+            this.actionArea.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         private void DebugMsg(string msg)

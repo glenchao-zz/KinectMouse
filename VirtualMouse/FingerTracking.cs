@@ -57,9 +57,9 @@ namespace VirtualMouse
 
             // Conver binaryArray to a binary handMatrix
             int index;
-            for (int i = (int)minX * 2; i < (int)maxX * 2; i++)
+            for (int i = (int)minX; i < (int)maxX; i++)
             {
-                for (int j = (int)minY * 2; j < (int)maxY * 2; j++)
+                for (int j = (int)minY; j < (int)maxY; j++)
                 {
                     index = Helper.Point2Index(new Point(i, j));
                     handMatrix[i, j] = binaryArray[index];
@@ -70,9 +70,9 @@ namespace VirtualMouse
             // A point is a inside point if all its adjacent point is part of the hand, 
             // otherwise it is a "potential" contour point
             HashSet<Point> potentialPoints = new HashSet<Point>();
-            for (int i = (int)minX * 2; i < (int)maxX * 2; i++)
+            for (int i = (int)minX; i < (int)maxX; i++)
             {
-                for (int j = (int)minY * 2; j < (int)maxY * 2; j++)
+                for (int j = (int)minY; j < (int)maxY; j++)
                 {
                     if (handMatrix[i, j])
                     {
