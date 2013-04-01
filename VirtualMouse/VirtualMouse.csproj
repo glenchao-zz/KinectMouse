@@ -54,9 +54,7 @@
   <PropertyGroup>
     <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemGroup>
     <Reference Include="Microsoft.Kinect, Version=1.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System" />
@@ -84,7 +82,7 @@
       <DependentUpon>ActionArea.xaml</DependentUpon>
     </Compile>
     <Compile Include="GestureMapper.cs" />
-    <Compile Include="Action.cs" />
+    <Compile Include="MouseAction.cs" />
     <Compile Include="Hand.cs" />
     <Compile Include="GestureRecognizer.cs" />
     <Compile Include="Helper.cs" />
@@ -128,9 +126,6 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="Properties\app.manifest">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

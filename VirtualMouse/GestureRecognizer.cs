@@ -30,7 +30,7 @@ namespace VirtualMouse
         private int numFingers = 0;
 
         const int mBufferLength = 10;
-        const int cBufferLength = 10;
+        const int cBufferLength = 15;
         const int cFilterLength = 4;
 
         bool isDragging = false;
@@ -69,7 +69,7 @@ namespace VirtualMouse
             else
             {
                 this.zeroCount = 0;
-                this.numFingers = Math.Max(hand.fingertips.Count, numFingers);
+                this.numFingers = Math.Max(hand.fingertips.Count, this.numFingers);
             }
 
             // Cursor click setup
@@ -92,27 +92,30 @@ namespace VirtualMouse
             }
 
             // Cursor move setup
-            if (hand.fingertips.Count == 1)
+            if (hand.fingertips.Count > 0 && (this.numFingers == 1 || this.numFingers == 2))
             {
-                if (this.clickCount == 3 && this.MovingBuffer.Count <  mBufferLength * 2 / 3)
+                if (this.clickCount == 3 && this.MovingBuffer.Count <  mBufferLength)
                 {
                     isDragging = true;
                 }
                 
                 Point finger = Helper.Convert2DrawingPoint(hand.fingertips[0].point);
-                finger.X = (int)((finger.X - relativeX) * xMultiplier * 1.1);
-                finger.Y = (int)((relativeY - finger.Y) * yMultiplier * 1.1);
+                finger.X = (int)((finger.X - relativeX) * xMultiplier * 2);
+                finger.Y = (int)((relativeY - finger.Y) * yMultiplier * 2);
                 this.MovingBuffer.Enqueue(finger);
                 if (this.MovingBuffer.Count == 1)
                 {
                     FingerDownPos = this.MovingBuffer.ElementAt(0);
                 }
-                else if (this.MovingBuffer.Count > mBufferLength * 2 / 3)
+                else if (this.MovingBuffer.Count == mBufferLength)
                 {
                     Point pos = new Point();
-                    pos.X = (int)(this.MouseDownPos.X + this.MovingBuffer.Average(k => k.X) - FingerDownPos.X);
-                    pos.Y = (int)(this.MouseDownPos.Y + this.MovingBuffer.Average(k => k.Y) - FingerDownPos.Y);
-                    GestureReady(1, 0, new MapperObject(pos, isDragging));
+                    double averageX = this.MovingBuffer.Average(k => k.X);
+                    double averageY = this.MovingBuffer.Average(k => k.Y);
+                    int scroll = (int)(finger.Y - averageY) * -2 / 3;
+                    pos.X = (int)(this.MouseDownPos.X + averageX - FingerDownPos.X);
+                    pos.Y = (int)(this.MouseDownPos.Y + averageY - FingerDownPos.Y);
+                    GestureReady(this.numFingers, 0, new MapperObject(pos, isDragging, scroll));
                 }
             }
         }
@@ -130,7 +133,6 @@ namespace VirtualMouse
             this.MouseDownPos = System.Windows.Forms.Cursor.Position;
             this.isDragging = false;
             GestureReady(0, 0, null);
-            Console.WriteLine("Flush recognizer");
         }
 
 

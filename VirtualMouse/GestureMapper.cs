@@ -13,20 +13,22 @@ namespace VirtualMouse
             if (obj != null && fingers == 1 && clicks == 0)
             {
                 if (obj.isDragging)
-                    Action.DownLeft();
-                Action.Move(obj.point);
+                    MouseAction.DownLeft();
+                MouseAction.Move(obj.point);
             }
-            else if (obj == null && fingers == 1 && clicks == 1)
-                Action.ClickLeft();
-            else if (obj == null && fingers == 1 && clicks == 2)
+            else if (obj != null && fingers == 2 && clicks == 0)
             {
-                Action.ClickLeft();
-                Action.ClickLeft();
+                MouseAction.MouseScroll((uint)obj.value);
+            }
+            else if (obj == null && fingers == 1)
+            {
+                for(int i = 0; i < clicks; i++)
+                    MouseAction.ClickLeft();
             }
             else if (obj == null && fingers == 2 && clicks == 1)
-                Action.ClickRight();
+                MouseAction.ClickRight();
             else if (obj == null && fingers == 0 && clicks == 0)
-                Action.ClearAction();
+                MouseAction.ClearAction();
         }
     }
 
@@ -34,10 +36,13 @@ namespace VirtualMouse
     {
         public bool isDragging { get; set; }
         public Point point { get; set; }
+        public int value { get; set; }
         public MapperObject() { }
-        public MapperObject(Point point, bool isDragging){
+        public MapperObject(Point point, bool isDragging, int value)
+        {
             this.isDragging = isDragging; 
-            this.point = point; 
+            this.point = point;
+            this.value = value;
         }
     }
 }
