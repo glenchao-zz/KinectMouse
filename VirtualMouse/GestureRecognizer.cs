@@ -57,7 +57,7 @@ namespace VirtualMouse
                 if (++this.zeroCount == 5)
                 {
                     this.clickCount = this.clickCount / 2;
-                    if (this.clickCount > 0)
+                    if (this.clickCount > 0 && MovingBuffer.Count < mBufferLength && !isDragging)
                     {
                         Console.WriteLine(numFingers + " fingers click " + clickCount + " times");
                         GestureReady(numFingers, clickCount, null);
