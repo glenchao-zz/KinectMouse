@@ -86,7 +86,6 @@
     <Compile Include="Hand.cs" />
     <Compile Include="GestureRecognizer.cs" />
     <Compile Include="Helper.cs" />
-    <Compile Include="Settings.cs" />
     <Compile Include="SurfaceDetection.cs" />
     <Page Include="ActionArea.xaml">
       <SubType>Designer</SubType>
@@ -107,7 +106,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

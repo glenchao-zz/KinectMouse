@@ -1,15 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Kinect;
 using System.Collections.Generic;
-using System.Windows.Input;
 using System.Windows.Forms;
 
 namespace VirtualMouse
@@ -19,11 +14,6 @@ namespace VirtualMouse
     /// </summary>
     public partial class MainWindow : Window
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        User user = new User();
-
         // finger stuff
         GestureRecognizer recognizer;
         GestureMapper mapper;
@@ -307,20 +297,20 @@ namespace VirtualMouse
                             if (percentDiff > 1.008) // sketchy numbers... need to tweek 
                                 // Is the hand
                                 binaryArray[i] = true;
-                            Point pt = Helper.Index2Point(i);
-                            double diff = this.surfaceDetection.surface.DistanceToPoint(new Vector(pt.X, pt.Y, depth));
-                            if (diff < 14)
-                            {
+                            //Point pt = Helper.Index2Point(i);
+                            //double diff = this.surfaceDetection.surface.DistanceToPoint(new Vector(pt.X, pt.Y, depth));
+                            //if (diff < 14)
+                            //{
                                 this.depthImageColor[colorPixelIndex++] = 0;
                                 this.depthImageColor[colorPixelIndex++] = 100;
                                 this.depthImageColor[colorPixelIndex++] = 0;
-                            }
-                            else
-                            {
-                                this.depthImageColor[colorPixelIndex++] = 0;
-                                this.depthImageColor[colorPixelIndex++] = 0;
-                                this.depthImageColor[colorPixelIndex++] = 100;
-                            }
+                            //}
+                            //else
+                            //{
+                            //    this.depthImageColor[colorPixelIndex++] = 0;
+                            //    this.depthImageColor[colorPixelIndex++] = 0;
+                            //    this.depthImageColor[colorPixelIndex++] = 100;
+                            //}
                         }
                         else
                         {

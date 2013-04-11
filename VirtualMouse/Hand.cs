@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Windows;
 
 namespace VirtualMouse
 {
+    /// <summary>
+    /// Hand object to pass information around
+    /// </summary>
     class Hand
     {
         public List<Point> contourPoints { get; set; }

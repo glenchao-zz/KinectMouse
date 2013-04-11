@@ -1,22 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
 using Microsoft.Kinect;
 
 namespace VirtualMouse
 {
     static class Helper
     {
+        /// <summary>
+        /// Converts different points 
+        /// </summary>
+        /// <param name="pt"></param>
+        /// <returns></returns>
         public static System.Drawing.Point Convert2DrawingPoint(Point pt)
         {
             return new System.Drawing.Point((int)pt.X, (int)pt.Y);
         }
 
+        /// <summary>
+        /// Save recognizer object
+        /// </summary>
+        /// <param name="yMult"></param>
+        /// <param name="xMult"></param>
+        /// <param name="relX"></param>
+        /// <param name="relY"></param>
         public static void SaveRecognizer(double yMult, double xMult, double relX, double relY)
         {
             Properties.Settings.Default.yMultiplier = yMult;
@@ -27,6 +34,10 @@ namespace VirtualMouse
             Properties.Settings.Default.Save();
         }
 
+        /// <summary>
+        /// Loads recognizer object and restore
+        /// </summary>
+        /// <param name="gr"></param>
         public static void LoadRecognizer(GestureRecognizer gr)
         {
             if (Properties.Settings.Default.b_Recognizer)
@@ -38,6 +49,13 @@ namespace VirtualMouse
             }
         }
 
+        /// <summary>
+        /// Save ActionArea object data
+        /// </summary>
+        /// <param name="topLeft"></param>
+        /// <param name="botLeft"></param>
+        /// <param name="botRight"></param>
+        /// <param name="topRight"></param>
         public static void SaveActionArea(Point topLeft, Point botLeft, Point botRight, Point topRight)
         {
             Properties.Settings.Default.topLeftX = topLeft.X;
@@ -52,6 +70,10 @@ namespace VirtualMouse
             Properties.Settings.Default.Save();
         }
 
+        /// <summary>
+        /// Load ActionArea object and restore
+        /// </summary>
+        /// <param name="actionArea"></param>
         public static void LoadActionArea(ActionArea actionArea)
         {
             if (Properties.Settings.Default.b_ActionArea)
@@ -65,6 +87,10 @@ namespace VirtualMouse
                                                     Properties.Settings.Default.topRightY));
         }
 
+        /// <summary>
+        /// Save surface object
+        /// </summary>
+        /// <param name="surface"></param>
         public static void SaveSurface(Plane surface)
         {
             Properties.Settings.Default.SurfaceX = surface.normal.x;
@@ -75,6 +101,10 @@ namespace VirtualMouse
             Properties.Settings.Default.Save();
         }
 
+        /// <summary>
+        /// Loads surface object and restore
+        /// </summary>
+        /// <returns></returns>
         public static Plane LoadSurface()
         {
             if (!Properties.Settings.Default.b_Surface)
@@ -86,6 +116,14 @@ namespace VirtualMouse
                                       Properties.Settings.Default.SurfaceD);
         }
 
+        /// <summary>
+        /// Calculate distribution of depth over an axis and pick the most common one to 
+        /// reduce the chance of error
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="start"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
         public static double GetMostCommonDepthImagePixel(DepthImagePixel[] data, int start, int length)
         {
             if (start + length > data.Length)
@@ -101,40 +139,27 @@ namespace VirtualMouse
             return (double)temp;
         }
 
+        /// <summary>
+        /// Converts 2D (X,Y) indices to 1D index base on image resolution
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
         public static int Point2Index(Point point)
         {
             return 640 * ((int)point.Y) + (int)point.X;
         }
 
+        /// <summary>
+        /// Converts 1D index to 2D (X,Y) indices base on image resolution
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
         public static Point Index2Point(int i)
         {
             Point pt = new Point();
             pt.X = i % 640;
             pt.Y = (i - pt.X) / 640;
             return pt;
-        }
-
-        public static void DrawPoint(double X, double Y, Color color, Canvas canvas)
-        {
-            Ellipse point = new Ellipse();
-            point.Height = 6;
-            point.Width = 6;
-            point.Fill = new SolidColorBrush(color);
-            Canvas.SetTop(point, Y / 2 - 3);
-            Canvas.SetLeft(point, X / 2 - 3);
-            canvas.Children.Add(point);
-        }
-
-        public static void DrawLine(double X1, double X2, double Y1, double Y2, Color color, Canvas canvas)
-        {
-            Line line = new Line();
-            line.Stroke = new SolidColorBrush(color);
-            line.StrokeThickness = 1;
-            line.X1 = X1 / 2;
-            line.X2 = X2 / 2;
-            line.Y1 = Y1 / 2;
-            line.Y2 = Y2 / 2;
-            canvas.Children.Add(line);
         }
     }
 }

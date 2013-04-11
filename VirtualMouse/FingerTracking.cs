@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 
 namespace VirtualMouse
@@ -32,9 +31,15 @@ namespace VirtualMouse
         // Angle formed by three sample points
         private const double Theta = 45 * (Math.PI / 180);
 
+        /// <summary>
+        /// Matrices for hand and contour definition
+        /// </summary>
         private bool[,] handMatrix;
         private bool[,] contourMatrix;
 
+        /// <summary>
+        /// The hand being tracked
+        /// </summary>
         public Hand trackedHand { get; set; }
 
         public FingerTracking()
@@ -79,6 +84,8 @@ namespace VirtualMouse
                         int adjPointCount = 0;
                         int validPointCount = 0;
 
+
+                        // Check neighbours for contour
                         if (i > 0)
                         {
                             adjPointCount++;
@@ -177,7 +184,9 @@ namespace VirtualMouse
             return list;
         }
 
-        // Find a largest circle in the hand area and label the center as palm
+        /// <summary>
+        /// // Find a largest circle in the hand area and label the center as palm
+        /// </summary>
         private void findPalm()
         {
             trackedHand.hasPalm = false;
@@ -216,6 +225,10 @@ namespace VirtualMouse
                 trackedHand.palm = new Point();
         }
 
+        /// <summary>
+        /// Find fingers using k curvature algorithm
+        /// </summary>
+        /// <param name="depthImageData"></param>
         private void findFingers(DepthImagePixel[] depthImageData)
         {
             int numPoints = trackedHand.contourPoints.Count;
@@ -253,6 +266,12 @@ namespace VirtualMouse
             }
         }
 
+        /// <summary>
+        /// check if palm point cirlce is valid
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="r"></param>
+        /// <returns></returns>
         private bool isCircleInside(Point p, float r)
         {
             if (p.X - r < 0 || !handMatrix[(int)(p.X - r), (int)p.Y])

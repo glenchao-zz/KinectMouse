@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace VirtualMouse
@@ -49,6 +42,9 @@ namespace VirtualMouse
         /// </summary>
         private object selectedShape = null;
 
+        /// <summary>
+        /// Position where hand first touch surface
+        /// </summary>
         private Point downPos = new Point();
 
         /// <summary>
@@ -76,8 +72,14 @@ namespace VirtualMouse
         public enum borders {leftBorder = 0, botBorder, rightBorder, topBorder};
         public lineEq[] borderEqs { get; set; }
 
+        /// <summary>
+        /// Indices of the frame where ActionArea is defined 
+        /// </summary>
         public int[] ValidIndeces;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ActionArea()
         {
             InitializeComponent();
@@ -97,6 +99,13 @@ namespace VirtualMouse
             this.DataContext = this;
         }
 
+        /// <summary>
+        /// Loads the action area if there's one saved from previous definition
+        /// </summary>
+        /// <param name="topLeft"></param>
+        /// <param name="botLeft"></param>
+        /// <param name="botRight"></param>
+        /// <param name="topRight"></param>
         public void LoadActionArea(Point topLeft, Point botLeft, Point botRight, Point topRight)
         {
             borderEqs = new lineEq[4];
@@ -115,6 +124,9 @@ namespace VirtualMouse
             this.DataContext = this;
         }
 
+        /// <summary>
+        /// Initialization
+        /// </summary>
         public void InitActionArea()
         {
 
@@ -122,6 +134,10 @@ namespace VirtualMouse
             GetValidIndices();
         }
 
+        /// <summary>
+        /// Calculates the midpoint of the ActionArea. Used by the SurfaceDetection as the origin
+        /// </summary>
+        /// <returns></returns>
         public Point MidPoint()
         {
             return new Point(new[] { _cornerPoints[(int)corners.topLeft].X, 
@@ -130,6 +146,11 @@ namespace VirtualMouse
                                      _cornerPoints[(int)corners.botRight].Y }.Average());
         }
 
+        /// <summary>
+        /// UI Indicator
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void HighLightCorner(object sender, MouseEventArgs e)
         {
             if (sender.GetType() == typeof(Ellipse))
@@ -145,6 +166,11 @@ namespace VirtualMouse
 
         }
         
+        /// <summary>
+        /// UI Indicator
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void UnHighLightCorner(object sender, MouseEventArgs e)
         {
             if (sender.GetType() == typeof(Ellipse))
@@ -178,6 +204,11 @@ namespace VirtualMouse
             }
         }
 
+        /// <summary>
+        /// Binding ellipses to polygon when dragging corner to resize
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ResizeArea(object sender, MouseEventArgs e)
         {
             Ellipse selectedEllipse = this.selectedShape as Ellipse;
@@ -193,6 +224,11 @@ namespace VirtualMouse
             InitActionArea();
         }
 
+        /// <summary>
+        /// Binding polygon to corner ellipses when moving 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MovePolygon(object sender, MouseEventArgs e)
         {
             Point mouse = Mouse.GetPosition(this.actionCanvas);
@@ -209,6 +245,9 @@ namespace VirtualMouse
             InitActionArea();
         }
 
+        /// <summary>
+        /// Get valid indices
+        /// </summary>
         private void GetValidIndices()
         {
             // Calculate valid indices 
@@ -227,6 +266,9 @@ namespace VirtualMouse
             }
         }
 
+        /// <summary>
+        /// Calculate the border equations for faster computation when checking valid indices
+        /// </summary>
         private void GetBorderEquations()
         {
             // Calculate border euqations
@@ -238,6 +280,11 @@ namespace VirtualMouse
             }
         }
 
+        /// <summary>
+        /// Mouse Event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void actionCanvas_MouseLeave(object sender, MouseEventArgs e)
         {
             this.DeselectShape(null, null);
@@ -264,6 +311,12 @@ namespace VirtualMouse
             this.selectedShape = null;
         }
 
+
+        /// <summary>
+        /// callback functionwhen clicking!
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ConfirmButton_Click(object sender, RoutedEventArgs e)
         {
             ConfirmCallBack();

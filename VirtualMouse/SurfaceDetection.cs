@@ -1,19 +1,11 @@
 ﻿using Microsoft.Kinect;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 
 namespace VirtualMouse
 {
     internal class SurfaceDetection
     {
-        //private Array Surface(bitmap, skeletonframe)
-        //{
-
-
-        //}
         public DepthImagePixel[] emptyFrame { get; set; }
         public int[] surfaceMatrix { get; set; }
         public Point definitionPoint { get; set; }
@@ -25,6 +17,12 @@ namespace VirtualMouse
         public Plane surface { get; set; }
         private int distance = 2;
 
+        /// <summary>
+        /// Given an origin point, find a surface equation (plane equation)
+        /// </summary>
+        /// <param name="distX"></param>
+        /// <param name="distY"></param>
+        /// <returns></returns>
         public Plane getSurface(int distX, int distY)
         {
             int range = 7;

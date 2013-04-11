@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace VirtualMouse
 {
     class GestureMapper
     {
+        /// <summary>
+        /// Intepret gesture data and map to corresponding mouse actions
+        /// </summary>
+        /// <param name="fingers"></param>
+        /// <param name="clicks"></param>
+        /// <param name="obj"></param>
         public void MapGesture2Action(int fingers, int clicks, MapperObject obj)
         {
             if (obj != null && fingers == 1 && clicks == 0)

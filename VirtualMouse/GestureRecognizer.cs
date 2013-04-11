@@ -2,39 +2,64 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace VirtualMouse
 {
     class GestureRecognizer
     {
+        /// <summary>
+        /// X,Y multipliers that maps the small action area to the large screen area 
+        /// so user's fingers won't have to move a lot
+        /// </summary>
         public double relativeX { get; set; }
         public double relativeY { get; set; }
-
         public double xMultiplier { get; set; }
         public double yMultiplier { get; set; }
 
+        /// <summary>
+        /// Callback function tirggered once gesture recognizer collects enough data
+        /// </summary>
+        /// <param name="fingers"></param>
+        /// <param name="clicks"></param>
+        /// <param name="obj"></param>
         public delegate void GestureEvent(int fingers, int clicks, MapperObject obj);
         public event GestureEvent GestureReady;
 
+        /// <summary>
+        /// Queue buffers that does the filtering to reduce errors
+        /// </summary>
         private Queue<Point> MovingBuffer;
         private Queue<double> ClickBuffer;
         private Queue<double> ClickFilter;
 
+        /// <summary>
+        /// Variables used to calculate finger and cursor delta
+        /// </summary>
         public Point FingerDownPos;
         public Point MouseDownPos;
 
+        /// <summary>
+        /// Variables for data collection
+        /// </summary>
         private int zeroCount = 0;
         private int clickCount = 0;
         private int numFingers = 0;
 
+        /// <summary>
+        /// Buffer length definitions
+        /// </summary>
         const int mBufferLength = 10;
         const int cBufferLength = 15;
         const int cFilterLength = 4;
 
+        /// <summary>
+        /// Dragging condition
+        /// </summary>
         bool isDragging = false;
 
+        /// <summary>
+        /// Recognizer constructor
+        /// </summary>
         public GestureRecognizer()
         {
             this.MovingBuffer = new Queue<Point>(mBufferLength);
@@ -42,6 +67,10 @@ namespace VirtualMouse
             this.ClickFilter = new Queue<double>(cFilterLength);
         }
 
+        /// <summary>
+        /// Adds new hand data to recognizer and collect useful data for mapper 
+        /// </summary>
+        /// <param name="hand"></param>
         public void Add2Buffer(Hand hand)
         {
             // If buffer is full
@@ -56,8 +85,9 @@ namespace VirtualMouse
             {
                 if (++this.zeroCount == 5)
                 {
+                    // Stopping condition (fives trailing 0s)
                     this.clickCount = this.clickCount / 2;
-                    if (this.clickCount > 0 && MovingBuffer.Count < mBufferLength && !isDragging)
+                    if (this.clickCount > 0)
                     {
                         Console.WriteLine(numFingers + " fingers click " + clickCount + " times");
                         GestureReady(numFingers, clickCount, null);
@@ -68,6 +98,7 @@ namespace VirtualMouse
             }
             else
             {
+                // Collects number of fingers
                 this.zeroCount = 0;
                 this.numFingers = Math.Max(hand.fingertips.Count, this.numFingers);
             }
@@ -78,7 +109,8 @@ namespace VirtualMouse
 
             bool tooClose = false;
             this.clickCount = 0;
-
+            // Number of clicks checking with double buffer solution for optimization
+            // Optimized from linear to constant 
             foreach (double d in this.ClickBuffer)
             {
                 if (d == 0.50 && !tooClose)
@@ -98,7 +130,8 @@ namespace VirtualMouse
                 {
                     isDragging = true;
                 }
-                
+                // Cursor movement condition
+                // Added differentiator for dragging
                 Point finger = Helper.Convert2DrawingPoint(hand.fingertips[0].point);
                 finger.X = (int)((finger.X - relativeX) * xMultiplier * 2);
                 finger.Y = (int)((relativeY - finger.Y) * yMultiplier * 2);
@@ -121,7 +154,9 @@ namespace VirtualMouse
         }
 
             
-
+        /// <summary>
+        /// Reset buffers to initial condition once recognizer finishes
+        /// </summary>
         public void Reset()
         {
             this.MovingBuffer.Clear();
