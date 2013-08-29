@@ -27,7 +27,12 @@
         </Grid>
         <StackPanel Grid.Row="2" Grid.Column="0">
             <StackPanel Orientation="Horizontal" Margin="10">
-                <Button x:Name="initEnvButton" Content="Initialize Environment" Click="InitializeEnvironmentButton_Click" />
+                <Button x:Name="initEnvButton" Content="Initialize Environment" Margin="10 0"
+                        Click="InitializeEnvironmentButton_Click" />
+                <Button x:Name="lookDownButton" Content="Look Down" Margin="10 0" 
+                        Click="lookDownButton_Click"/>
+                <Button x:Name="resetViewButton" Content="Reset View" Margin="10 0"
+                        Click="resetViewButton_Click"/>
             </StackPanel>
         </StackPanel>
         <DockPanel x:Name="dockPanel" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" 

@@ -491,6 +491,18 @@ namespace VirtualMouse
         {
             this.DebugBox.Text = msg + Environment.NewLine + this.DebugBox.Text;
         }
+
+        private void lookDownButton_Click(object sender, RoutedEventArgs e)
+        {
+            if(this.sensor.ElevationAngle != this.sensor.MinElevationAngle)
+                this.sensor.ElevationAngle = this.sensor.MinElevationAngle;
+        }
+
+        private void resetViewButton_Click(object sender, RoutedEventArgs e)
+        {
+            if(this.sensor.ElevationAngle != 0)
+                this.sensor.ElevationAngle = 0;
+        }
     }
 }
 
