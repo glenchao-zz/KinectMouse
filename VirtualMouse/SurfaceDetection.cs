@@ -15,6 +15,7 @@ namespace VirtualMouse
         public Vector vectorA { get; set; }
         public Vector vectorB { get; set; }
         public Plane surface { get; set; }
+        public bool testSurface { get; set; }
         private int distance = 2;
 
         /// <summary>

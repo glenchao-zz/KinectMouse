@@ -203,7 +203,8 @@ namespace VirtualMouse
                 for (int k = 0; k < trackedHand.contourPoints.Count; k += contourJump)
                 {
                     distance = distanceEuclidean(trackedHand.insidePoints[j], trackedHand.contourPoints[k]);
-                    if (distance < 25)
+                    //surface thickness 
+                    if (distance < 10)
                     {
                         validInside = false;
                         break;

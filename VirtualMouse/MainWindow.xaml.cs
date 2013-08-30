@@ -149,7 +149,8 @@ namespace VirtualMouse
                 this.actionArea.InitActionArea();
 
                 // Set up surface
-                surfaceDetection.surface = Helper.LoadSurface();
+                this.surfaceDetection.surface = Helper.LoadSurface();
+                this.surfaceDetection.testSurface = false;
                 fingerTracking.surface = surfaceDetection.surface;
                 if (this.surfaceDetection.surface == null)
                 {
@@ -297,20 +298,30 @@ namespace VirtualMouse
                             if (percentDiff > 1.008) // sketchy numbers... need to tweek 
                                 // Is the hand
                                 binaryArray[i] = true;
-                            //Point pt = Helper.Index2Point(i);
-                            //double diff = this.surfaceDetection.surface.DistanceToPoint(new Vector(pt.X, pt.Y, depth));
-                            //if (diff < 14)
-                            //{
+
+                            if (this.surfaceDetection.testSurface)
+                            {
+                                Point pt = Helper.Index2Point(i);
+                                double diff = this.surfaceDetection.surface.DistanceToPoint(new Vector(pt.X, pt.Y, depth));
+                                if (diff > 14)
+                                {
+                                    this.depthImageColor[colorPixelIndex++] = 0;
+                                    this.depthImageColor[colorPixelIndex++] = 0;
+                                    this.depthImageColor[colorPixelIndex++] = 100;
+                                }
+                                else
+                                {
+                                    this.depthImageColor[colorPixelIndex++] = 0;
+                                    this.depthImageColor[colorPixelIndex++] = 100;
+                                    this.depthImageColor[colorPixelIndex++] = 0;
+                                }
+                            }
+                            else
+                            {
                                 this.depthImageColor[colorPixelIndex++] = 0;
                                 this.depthImageColor[colorPixelIndex++] = 100;
                                 this.depthImageColor[colorPixelIndex++] = 0;
-                            //}
-                            //else
-                            //{
-                            //    this.depthImageColor[colorPixelIndex++] = 0;
-                            //    this.depthImageColor[colorPixelIndex++] = 0;
-                            //    this.depthImageColor[colorPixelIndex++] = 100;
-                            //}
+                            }
                         }
                         else
                         {
@@ -363,7 +374,7 @@ namespace VirtualMouse
                         {
                             pt = fingertip.point;
                             fingerIndex = Helper.Point2Index(pt);
-  
+
                             for (int i = -coloringRange; i < coloringRange; i++)
                             {
                                 for (int j = -coloringRange; j < coloringRange; j++)
@@ -502,6 +513,16 @@ namespace VirtualMouse
         {
             if(this.sensor.ElevationAngle != 0)
                 this.sensor.ElevationAngle = 0;
+        }
+
+        private void testSurfComboBox_Checked(object sender, RoutedEventArgs e)
+        {
+            this.surfaceDetection.testSurface = true;
+        }
+
+        private void testSurfComboBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            this.surfaceDetection.testSurface = false;
         }
     }
 }
