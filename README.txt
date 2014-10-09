@@ -1,5 +1,7 @@
 README 
 
+Demo http://youtu.be/203y6WW7W0c
+
 There are a lot of finger recognition projects using Kinect. What sets this project apart is its ability to detect and
 recognize different finger guestures with a custom-defined surface. This is hard because as your hand get close to any surface
 the kinect's ability to clearly differentiate your hand and the surface quickly decreases. This project also implements a simple
@@ -45,5 +47,3 @@ Finger recognition algorithm:
 * We used a contour finding algorithm 
   3D Hand and Finger Recognition using Kinect, F. Trapero Cerezo, Universidad de Granada (UGR), Spain
 * The link to the paper we based our algorithm on doesn't seem to work anymore... read comments in the code for details
-
-Demo http://youtu.be/203y6WW7W0c
