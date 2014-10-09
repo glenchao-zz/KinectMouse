@@ -28,4 +28,4 @@ Possible Gestures ************************************************
 Extra Info: 
 Kinect C# SDK Documentation http://msdn.microsoft.com/en-us/library/microsoft.kinect.aspx
 
-<iframe width="560" height="315" src="//www.youtube.com/embed/203y6WW7W0c" frameborder="0" allowfullscreen></iframe>
+Demo http://youtu.be/203y6WW7W0c
