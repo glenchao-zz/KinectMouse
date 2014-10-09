@@ -1,5 +1,19 @@
 README 
 
+There are a lot of finger recognition projects using Kinect. What sets this project apart is its ability to detect and
+recognize different finger guestures with a custom-defined surface. This is hard because as your hand get close to any surface
+the kinect's ability to clearly differentiate your hand and the surface quickly decreases. This project also implements a simple
+gesture recognizer to map different gestures to various mouse actions.
+
+This project was meant to be a proof of concept, so the code was written in C# to get us going fast. 
+For a more efficient implementation, you would want to use C++ instead. 
+
+Contributors *****************************************************
+GLEN CHAO
+IVAN SHAO
+NAMAL RAJATHEVA
+ELI XI CHEN
+
 Setup Instruction ************************************************
 1. Acquire a Kinect for PC (note: "for PC" not "xbox360")
    Will not be able to run the code without the kinect.
