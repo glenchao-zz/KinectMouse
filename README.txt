@@ -39,7 +39,11 @@ Possible Gestures ************************************************
 2 Finger Movement 		-- Vertical Scrolling 
 1 Finger Click + Move 	-- Dragging 
 
-Extra Info: 
+Extra Info ********************************************************
 Kinect C# SDK Documentation http://msdn.microsoft.com/en-us/library/microsoft.kinect.aspx
+Finger recognition algorithm:
+* We used a contour finding algorithm 
+  3D Hand and Finger Recognition using Kinect, F. Trapero Cerezo, Universidad de Granada (UGR), Spain
+* The link to the paper we based our algorithm on doesn't seem to work anymore... read comments in the code for details
 
 Demo http://youtu.be/203y6WW7W0c
